@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>MMLLGammatone filter bank demo</title>
+    </head>
+    <body>
+        
+        <h1>Gammatone filter bank on audio input drives cross synthesis</h1>
+        
+        <p>
+        Browsers supporting Web Audio API only.
+        </p>
+        
+        <script src="../MMLL.js"></script>
+        <script type="text/javascript">
+            
+            //slightly more efficient than SuperCollider, though running on larger blocksize of 1024 avoiding many 64 sample function calls
+            
+            "use strict";
+            
+            var audioblocksize = 1024; //min possible is 256
+            
+            var monobuffer = new Float64Array(audioblocksize);
+            var sumbuffer = new Float64Array(audioblocksize);
+            
+            
+            var i,j; //general reusable counter variable2
+            
+            var phases = new Float64Array(88); //0.0;
+            var phasechanges = new Float64Array(88); //0.0;
+            var wavetablesize = 2048; //highish resolution
+            var wavetable = new Float64Array(wavetablesize+1); //include guard element at end just in case array indexing round off mistake
+            
+            var gammatonefilterbank;
+            
+            //based on 88 piano keys
+            //calculated from ISO2002 100dB phon curve as approximation to sensitivity of outer ear
+            var outereargain = [ 0.080993772688853, 0.089237063418603, 0.097970525722848, 0.10876266808815, 0.12105360022674, 0.13407538922284, 0.14787149408674, 0.16167718172822, 0.17551213214451, 0.19016975152285, 0.20569895830538, 0.22220242493157, 0.2397154127401, 0.2582697769952, 0.27792744116278, 0.29856170337058, 0.32031587344117, 0.34336361377938, 0.36778184407609, 0.39203618886184, 0.41615498938524, 0.44170796842, 0.46878040665827, 0.49446634124901, 0.52001934250193, 0.54709180427952, 0.57577407840633, 0.60165721569576, 0.62782392863276, 0.6555465952902, 0.68491773749099, 0.72411898089945, 0.77354432147194, 0.82590864573464, 0.88138671475204, 0.90157113760596, 0.90157113760596, 0.90157113760596, 0.90157113760596, 0.91510438365248, 0.93321426408541, 0.95240101404735, 0.97272866753273, 0.98926474289463, 1.0053814152966, 1.0224564349105, 1.0405467880267, 1.052760426677, 1.061847894439, 1.071475731154, 1.0816760688321, 1.0839269140212, 1.0839269140212, 1.0839269140212, 1.0839269140212, 1.0817917022137, 1.0789305551391, 1.0758992754061, 1.0726877464002, 1.0605734918597, 1.0429115831426, 1.0241994426808, 1.0043746204451, 0.95672713285027, 0.89882037142901, 0.83747029478932, 0.77247215275345, 0.75895909569467, 0.74934344623004, 0.73915602049396, 0.72836281890006, 0.75972195442662, 0.81665861045357, 0.87698089623035, 0.94089013177825, 1.022563004048, 1.1129841925092, 1.2087821046319, 1.3102764570426, 1.3485952672556, 1.3833144995125, 1.4200982447533, 1.4590692653081, 1.4180204618623, 1.3674299412878, 1.3138311518147, 1.2570452124657, 1.1677392221542 ];
+            
+            //0.midicps = 8.1757989156437 Hz
+            //~miditofreq3 = {|midipitch| 8.1757989156437*(2**((midipitch)*0.083333333333333))}
+            
+            function midicps(midipitch) {
+                
+                return 8.1757989156437*Math.pow(2,midipitch*0.083333333333333);
+            }
+        
+        
+        var setup = function SetUp(sampleRate) {
+            
+            console.log("setup!");
+            
+            //one for each piano key
+            gammatonefilterbank = new Array(88);
+            
+            for (i=0; i<88; ++i) {
+                gammatonefilterbank[i] = new MMLLGammatone(sampleRate);
+                
+                var centrefreq = midicps(21+i);
+                var bandwidth = 24.7*(centrefreq*0.00437 +1);
+                gammatonefilterbank[i].setup(centrefreq,bandwidth);
+                
+                phasechanges[i] = centrefreq/sampleRate;
+                
+            }
+            
+            
+            var constant = Math.PI*2/wavetablesize;
+            
+            for (i=0; i<(wavetablesize+1); ++i) {
+                wavetable[i] = Math.sin(i*constant);
+            }
+            
+            
+            
+            
+        };
+        
+        var callback = function CallBack(input,output,n) {
+            
+            for (i = 0; i < n; ++i) {
+                
+                sumbuffer[i] = 0.0;
+                
+                //input[i] = Math.random()*2-1; //white noise
+            }
+            
+            //single gammatone filter test
+            //gammatone.next(inputL,monobuffer,n);
+            
+            for (j = 0; j < 88; ++j) {
+                
+                gammatonefilterbank[j].next(input.monoinput,monobuffer,n);
+                
+                var amp = outereargain[j];
+                
+                var phase = phases[j];
+                var phasechange = phasechanges[j];
+                var signow;
+                
+                for (i = 0; i < n; ++i) {
+                    
+                    signow = monobuffer[i];
+                    if(signow<0) signow = 0; //half wave rectification
+                    //could low pass filter too...
+                    
+                    //sum of saw waves
+                    //sumbuffer[i] += signow*amp*(phase-0.5);
+                    
+                    //sum of wavetable (sines), truncation interpolation for efficiency (hence larger wavetable size)
+                    sumbuffer[i] += signow*amp* wavetable[Math.floor(phase*wavetablesize)];
+                    
+                    phase = (phase + phasechange)%1.0;
+                    
+                }
+                
+                phases[j] = phase;
+                
+            }
+            
+            
+            
+            //for each sample
+            for (i = 0; i < n; ++i) {
+                
+                var outputval = sumbuffer[i];
+                
+                output.outputL[i] = outputval;
+                output.outputR[i] = outputval;
+                
+            }
+            
+        };
+        
+        var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+        
+        </script>
+    </body>
+</html>

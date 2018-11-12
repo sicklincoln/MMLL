@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>JavaScript Web Audio API MMLL test</title>
+</head>
+
+<body>
+
+<h1>MMLL testing </h1>
+
+<p>Recent browsers supporting Web Audio API only.</p>
+
+<input type="range" min="0" max="100" value="20" step="1" oninput="setKeyDecay(this.value)" /> Set key decay<br><br>
+<input type="range" min="0" max="100" value="50" step="1" oninput="setChromaLeak(this.value)" /> Set chroma leak<br><br>
+
+<script src="../MMLL.js"></script>
+
+<script type="text/javascript">
+    
+    "use strict";
+    
+    var i; //general reusable counter variable
+    
+    var audioblocksize = 256; //lowest latency possible
+    
+    var chorddetector;
+    
+    var setup = function SetUp(sampleRate) {
+        
+        chorddetector = new MMLLChordDetector(sampleRate,2,0.5);
+        
+    };
+
+var callback = function CallBack(input,output,n) {
+    
+    var chord = chorddetector.next(input.monoinput);
+    
+    console.log('chordnow',chord);
+    
+    //for each sample
+    for (i = 0; i < n; ++i) {
+        
+        output.outputL[i] = input.inputL[i];
+        output.outputR[i] = input.inputR[i];
+        
+    }
+    
+};
+
+var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+
+function setKeyDecay(newValue) {
+    chorddetector.keydecay = newValue*0.1;
+}
+
+function setChromaLeak(newValue) {
+    chorddetector.chromaleak = newValue*0.01;
+}
+
+
+</script>
+
+</body>
+</html>

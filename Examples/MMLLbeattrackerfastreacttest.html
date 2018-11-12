@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+            <title>JavaScript Web Audio API MMLL test</title>
+            
+    </head>
+    
+    <body>
+        
+        <h1>MMLL testing fast reacting Beat Tracker </h1>
+        
+        <p>Recent browsers supporting Web Audio API only.</p>
+     
+        <canvas id="canvas" width="400" height="200">
+            This text is displayed if your browser does not support HTML5 Canvas.
+        </canvas><br><br>
+        
+        <script src="../MMLL.js"></script>
+        
+       
+        <script type="text/javascript">
+            
+            
+            "use strict";
+            
+            var canvas = document.getElementById('canvas');
+            var context = canvas.getContext('2d');
+            
+            var i; //general reusable counter variable
+            
+            var audioblocksize = 256; //lowest latency possible
+            
+            var beattracker;
+            
+            var setup = function SetUp(sampleRate) {
+                
+                console.log("setup!");
+                
+                beattracker = new MMLLBeatTrackerFastReact(sampleRate);
+                
+            };
+        
+        var colourcanvas = 0;
+        
+        var callback = function CallBack(input,output,n) {
+            
+            //console.log("callback!");
+            
+            var beat = beattracker.next(input.monoinput); //keydecay=2, chromaleak=0.5
+            
+            var outputnow = 0;
+            
+            if(beat==1) {
+                outputnow = 1;
+                colourcanvas = 3;
+
+    //beattracker.tempo(),beattracker.phase()
+                
+                console.log("beat now",beat); //,beattracker.tempo(),beattracker.phase());
+                
+                //,beattracker.samplestonextbeat()
+                //samples to next beat = (1/tempo (in bps))*sampleRate * (1-phase)
+                //samples to previous beat (just hit) = (1/bps)*sampleRate * phase
+                
+            }
+            
+            //for each sample
+            for (i = 0; i < n; ++i) {
+         
+                output.outputL[i] = outputnow + (input.inputL[i]);
+                output.outputR[i] = outputnow + (input.inputR[i]);
+                
+            }
+            
+        };
+
+        setInterval(function() {
+                    // Store the current transformation matrix
+                    context.save();
+                    
+                    // Use the identity matrix while clearing the canvas
+                    context.setTransform(1, 0, 0, 1, 0, 0);
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Restore the transform
+                    context.restore();
+                    
+                    var color = "rgb(0,0,0)";
+                    
+                    if(colourcanvas>0) {
+                    color = "rgb(255,150,0)";
+                    --colourcanvas;
+                    }
+                    
+                    context.fillStyle = color;
+                    context.fillRect(0,0,canvas.width,canvas.height);
+                    }, 30);
+                    
+                    
+        var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+
+        </script>
+    </body>
+</html>

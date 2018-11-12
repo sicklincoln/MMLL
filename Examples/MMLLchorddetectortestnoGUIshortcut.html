@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+            <title>JavaScript Web Audio API MMLL test</title>
+    </head>
+    
+    <body>
+        
+        <h1>MMLL testing </h1>
+        
+        <p>Recent browsers supporting Web Audio API only.</p>
+        
+        <input type="range" min="0" max="100" value="10" step="1" oninput="setKeyDecay(this.value)" /> Set key decay<br><br>
+        <input type="range" min="0" max="100" value="10" step="1" oninput="setChromaLeak(this.value)" /> Set chroma leak<br><br>
+        
+        <button onclick="initMic()">Open Microphone</button><br>
+        <button onclick="document.getElementById('file-input').click();">Open Audio File</button>
+        <input id="file-input" type="file" name="name" style="display: none;" /><br><br>
+        
+        <script src="../MMLL.js"></script>
+        
+        <script type="text/javascript">
+            
+            
+            "use strict";
+            
+            
+            var i; //general reusable counter variable
+            
+            //deltaphase = 1/sampleRate*twopi;
+            
+            var keydecay = 2;
+            var chromaleak = 0.5;
+            
+            var audioblocksize = 256; //lowest latency possible
+            
+            var chorddetector;
+            
+            var setup = function SetUp(sampleRate) {
+                
+                console.log("setup!");
+                
+                chorddetector = new MMLLChordDetector(sampleRate);
+                
+            };
+        
+        var callback = function CallBack(input,output,n) {
+            
+            //console.log("callback!");
+            
+            var chord = chorddetector.next(input.monoinput,keydecay,chromaleak); //keydecay=2, chromaleak=0.5
+            
+            console.log('chordnow',chord);
+            
+            
+            //for each sample
+            for (i = 0; i < n; ++i) {
+                
+                //modulator = Math.sin(phase) * amplitude;
+                
+                //var outputval = input[i];
+                
+                output.outputL[i] = input.inputL[i];
+                output.outputR[i] = input.inputR[i];
+                
+            }
+            
+        };
+        
+        
+        
+        
+        
+        this.audionotrunning = 1;
+        
+        
+        //https://stackoverflow.com/questions/16215771/how-open-select-file-dialog-via-js/16215950
+        var file_input = document.getElementById('file-input');
+        file_input.addEventListener("change",function uploadFile()
+                                    {
+                                    console.log(file_input.files[0],file_input.files[0].name);
+                                    
+                                    
+                                    if(audionotrunning) {
+                                    
+                                    //pass in filename or 1 for audio input
+                                    var webaudio = MMLLWebAudioSetup(audioblocksize,file_input.files[0],callback,setup);
+                                    
+                                    //webaudio.initSoundFileRead(file_input.files[0]);
+                                    
+                                    audionotrunning = 0;
+                                    }
+                                    
+                                    }, false);
+                                    
+                                    
+                                    function initMic() {
+                                        
+                                        if(audionotrunning) {
+                                            
+                                            var webaudio = MMLLWebAudioSetup(audioblocksize,1,callback,setup);
+                                            
+                                            audionotrunning = 0;
+                                        }
+                                        
+                                        
+                                    }
+        
+        function setKeyDecay(newValue) {
+            keydecay = newValue*0.1;
+        }
+        
+        function setChromaLeak(newValue) {
+            chromaleak = newValue*0.01;
+        }
+        
+        
+        
+        
+            </script>
+        
+        
+        
+    </body>
+</html>

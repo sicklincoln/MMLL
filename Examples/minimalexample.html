@@ -1,0 +1,34 @@
+<html>
+<head>
+<title>JavaScript Web Audio API MMLL test</title>
+</head>
+
+<body>
+
+<script src="../MMLL.js"></script>
+<script type="text/javascript">
+    
+var audioblocksize = 256; //lowest latency possible
+
+var setup = function SetUp(sampleRate) {
+        sensorydissonance = new MMLLSensoryDissonance(sampleRate); 
+    };
+
+var callback = function CallBack(input,output,n) {
+    
+    var dissonance = sensorydissonance.next(input.monoinput);
+      
+    console.log(dissonance);   
+      
+    for (i = 0; i < n; ++i) {
+        output.outputL[i] = input.inputL[i];
+        output.outputR[i] = input.inputR[i];
+    }
+    
+};
+
+var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+
+</script>
+</body>
+</html>

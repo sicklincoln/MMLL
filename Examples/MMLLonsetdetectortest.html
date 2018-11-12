@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>JavaScript Web Audio API MMLL test</title>
+</head>
+
+<body>
+
+<h1>MMLL testing audio onset detection</h1>
+
+<p>Recent browsers supporting Web Audio API only.</p>
+
+<input type="range" min="0" max="100" value="34" step="1" oninput="setThreshold(this.value)" /> Set threshold<br><br>
+
+<canvas id="canvas" width="400" height="200">
+    This text is displayed if your browser does not support HTML5 Canvas.
+</canvas><br><br>
+
+<script src="../MMLL.js"></script>
+
+<script type="text/javascript">
+    
+    "use strict";
+    
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+    
+    var i; //general reusable counter variable
+    
+    var audioblocksize = 256; //lowest latency possible
+    
+    var onsetdetector;
+    
+    var setup = function SetUp(sampleRate) {
+        
+        console.log("setup!");
+        
+        onsetdetector = new MMLLOnsetDetector(sampleRate); //default threshold 0.34
+        
+    };
+
+var callback = function CallBack(input,output,n) {
+    
+    var detection = onsetdetector.next(input.monoinput);
+    
+    if(detection) {
+        console.log('onsetnow');
+        
+        var randomcolor = "rgb(" +(Math.floor(Math.random()*255.9999))+ "," +(Math.floor(Math.random()*255.9999))+ "," +(Math.floor(Math.random()*255.9999))+ ")";
+        
+        context.fillStyle = randomcolor;
+        context.fillRect(0,0,canvas.width,canvas.height);
+    }
+    
+    
+    //for each sample
+    for (i = 0; i < n; ++i) {
+        
+        output.outputL[i] = input.inputL[i];
+        output.outputR[i] = input.inputR[i];
+        
+    }
+    
+};
+
+var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+
+
+function setThreshold(newValue) {
+    
+    var threshold = newValue*0.01;
+    
+    onsetdetector.threshold = threshold;
+    
+}
+
+
+</script>
+
+</body>
+</html>
