@@ -27,7 +27,7 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
     //var freqs = result.subarray(result.length / 2);
     this.reals = new Float32Array(this.fftsize);
     
-    this.output = new Float32Array(this.fftsize+2);
+    this.complex = new Float32Array(this.fftsize+2);
     
     //this.imags = new Float32Array(this.fftsize);
     
@@ -60,9 +60,10 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
             //this.fft.transform(this.reals, this.imags);
             //var output = this.fft.forward(this.reals);
             
-            this.fft.forward(this.reals,this.output);
+            this.fft.forward(this.reals,this.complex);
             
             //output format is interleaved k*2, k*2+1 real and imag parts
+            //DC and 0 then bin 1 real and imag ... nyquist and 0
             
             //power spectrum not amps, for comparative testing
             for (var k = 0; k < this.halffftsize; ++k) {
@@ -70,7 +71,7 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
                 var twok = 2*k;
                 //this.powers[k] = ((output[twok] * output[twok]) + (output[twok+1] * output[twok+1]) ); // * fftnormmult;
                 
-                this.powers[k] = ((this.output[twok] * this.output[twok]) + (this.output[twok+1] * this.output[twok+1]) );
+                this.powers[k] = ((this.complex[twok] * this.complex[twok]) + (this.complex[twok+1] * this.complex[twok+1]) );
                 
                 //will scale later in onset detector itself
                 
@@ -82,7 +83,7 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
             //console.log(this.postfftfunction,'undefined');
             
             if(this.postfftfunction !== undefined)
-            this.postfftfunction(this.powers);
+            this.postfftfunction(this.powers,this.complex); //could pass this.complex as second argument to get phase spectrum etc
             
             
         }

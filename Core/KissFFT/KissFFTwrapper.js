@@ -93,11 +93,13 @@ var FFTR = function (size) {
         
     };
     
-    this.inverse = function(cpx) {
+    this.inverse = function(cpx,output) {
 	this.ci.set(cpx);
 	kiss_fftri(this.icfg, this.cptr, this.rptr);
-	return new Float32Array(kissFFTModule.HEAPU8.buffer,
-				this.rptr, this.size);
+	//return new Float32Array(kissFFTModule.HEAPU8.buffer,
+				//this.rptr, this.size);
+      
+        output.set(this.ri);
         
     };
     

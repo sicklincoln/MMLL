@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>JavaScript Web Audio API MMLL test</title>
+</head>
+
+<body>
+
+<h1>MMLL testing IFFT</h1>
+
+<p>Recent browsers supporting Web Audio API only.</p>
+
+<input type="range" min="0" max="2000" value="0" step="1" oninput="setHoles(this.value)" /> Set number of zeroed fft components<br><br>
+<input type="range" min="0" max="512" value="512" step="1" oninput="lowPass(this.value)" /> Low pass filter cutoff<br><br>
+
+
+<script src="../MMLL.js"></script>
+
+<script type="text/javascript">
+    
+    "use strict";
+    
+    var i; //general reusable counter variable
+    
+   var fftsize = 1024;
+    var hopsize = 512;
+    var scalefactor = 1.0/fftsize;
+    
+    var audioblocksize = hopsize; //convenient, but extra code needed if different to output samples per block from hopsize buffer
+    //256 = lowest latency possible
+    
+    var numholes = 0;
+    var lpcutoff = 1024;
+    
+    var stft;
+    var overlapadd;
+    var ifftoutput = new Float32Array(fftsize);
+    var oaoutput = new Float32Array(hopsize);
+    
+    var setup = function SetUp(sampleRate) {
+        
+        stft = new MMLLSTFT(fftsize,hopsize,0); //no windowing
+        
+        overlapadd = new MMLLOverlapAdd(fftsize,hopsize,1); //triangle windows
+        
+        //chorddetector = new MMLLChordDetector(sampleRate,2,0.5);
+        
+    };
+
+var callback = function CallBack(input,output,n) {
+    
+    //var chord = chorddetector.next(input.monoinput);
+    
+    //not stereo, just operate on mono for now (otherwise duplicate code in parallel for left and right streams)
+    var ready = stft.next(input.monoinput);
+    
+    if(ready) {
+        
+        var fftdata = stft.complex;
+        
+        //manipulate data if you like here
+        
+        //...
+        
+        //zero random values
+        
+        for(i=0; i<numholes; ++i) {
+            var where = Math.floor(Math.random()* fftsize);
+        
+            fftdata[where] = 0.0;
+        }
+        
+        //low pass
+        
+        //<= to account for Nyquist bin at the top
+        for(i=(2*lpcutoff); i<=fftsize; ++i) {
+            fftdata[i] = 0.0;
+//            var where = 2*i;
+//            
+//            fftdata[where] = 0.0;
+//            fftdata[where+1] = 0.0;
+        }
+        
+        
+        //scale by dividing by fftsize
+        for(i=0; i<fftsize; ++i)
+            fftdata[i] *= scalefactor;
+        
+        //then inversefft
+        stft.fft.inverse(fftdata,ifftoutput);
+        
+        //then overlap add
+        overlapadd.next(ifftoutput,oaoutput);
+        
+    }
+    
+    //copy from oaoutput to actual sample output, easy since blocksize = hopsize
+    
+    //for each sample
+    for (i = 0; i < n; ++i) {
+        
+        output.outputL[i] = oaoutput[i];
+        output.outputR[i] = oaoutput[i];
+        
+    }
+    
+};
+
+var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+
+
+function setHoles(newValue) {
+    numholes = newValue;
+}
+
+function lowPass(newValue) {
+    lpcutoff = newValue;
+}
+
+</script>
+
+</body>
+</html>

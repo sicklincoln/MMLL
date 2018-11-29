@@ -119,11 +119,13 @@ var FFTR = function (size) {
         
     };
     
-    this.inverse = function(cpx) {
+    this.inverse = function(cpx,output) {
 	this.ci.set(cpx);
 	kiss_fftri(this.icfg, this.cptr, this.rptr);
-	return new Float32Array(kissFFTModule.HEAPU8.buffer,
-				this.rptr, this.size);
+	//return new Float32Array(kissFFTModule.HEAPU8.buffer,
+				//this.rptr, this.size);
+      
+        output.set(this.ri);
         
     };
     
@@ -504,7 +506,7 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
     //var freqs = result.subarray(result.length / 2);
     this.reals = new Float32Array(this.fftsize);
     
-    this.output = new Float32Array(this.fftsize+2);
+    this.complex = new Float32Array(this.fftsize+2);
     
     //this.imags = new Float32Array(this.fftsize);
     
@@ -537,9 +539,10 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
             //this.fft.transform(this.reals, this.imags);
             //var output = this.fft.forward(this.reals);
             
-            this.fft.forward(this.reals,this.output);
+            this.fft.forward(this.reals,this.complex);
             
             //output format is interleaved k*2, k*2+1 real and imag parts
+            //DC and 0 then bin 1 real and imag ... nyquist and 0
             
             //power spectrum not amps, for comparative testing
             for (var k = 0; k < this.halffftsize; ++k) {
@@ -547,7 +550,7 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
                 var twok = 2*k;
                 //this.powers[k] = ((output[twok] * output[twok]) + (output[twok+1] * output[twok+1]) ); // * fftnormmult;
                 
-                this.powers[k] = ((this.output[twok] * this.output[twok]) + (this.output[twok+1] * this.output[twok+1]) );
+                this.powers[k] = ((this.complex[twok] * this.complex[twok]) + (this.complex[twok+1] * this.complex[twok+1]) );
                 
                 //will scale later in onset detector itself
                 
@@ -559,12 +562,98 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
             //console.log(this.postfftfunction,'undefined');
             
             if(this.postfftfunction !== undefined)
-            this.postfftfunction(this.powers);
+            this.postfftfunction(this.powers,this.complex); //could pass this.complex as second argument to get phase spectrum etc
             
             
         }
         
         return ready;
+        
+    }
+    
+   
+
+}
+
+//output overlapped windows of samples for a certain window size and hop size (for example, as postlude to short term Fourier transform)
+
+//hopsize is length of cross fade, square or triangular window for now
+
+//assumes hopsize <= windowsize/2
+
+function MMLLOverlapAdd(windowsize=1024,hopsize=512,windowtype=0) {
+    
+    this.windowsize = windowsize;
+    
+    if(hopsize>windowsize) hopsize = windowsize;
+    
+    this.hopsize = hopsize;
+    this.overlap = windowsize - hopsize;
+    
+    this.store = new Array(windowsize);
+    
+    //start zeroed, will be summing to this buffer
+    for (var ii=0; ii<this.windowsize; ++ii)
+        this.store[ii] = 0;
+        
+    //this.outputpointer = 0; //this.overlap;
+
+    //input is windowsize long, output will be hopsize long
+    this.next = function(input,output) {
+ 
+        //copy data backwards in store by hopsize
+        
+        var i;
+        
+        for (i=0; i<this.overlap; ++i) {
+            
+            this.store[i] = this.store[this.hopsize+i];
+        }
+        
+        //zero end part
+        
+        for (i=0; i<this.hopsize; ++i) {
+            
+            this.store[this.hopsize+i] = 0.0;
+        }
+        
+        //sum in new data, windowed appropriately
+        
+        if(windowtype==0) {
+            
+            for (var i=0; i<this.windowsize; ++i)
+                this.store[i] += input[i];
+            
+                } else {
+                    
+                    //triangular windows for linear cross fade for now...
+                    var prop;
+                    var mult = 1.0/this.hopsize;
+                    var index;
+                    
+                    for (var i=0; i<this.hopsize; ++i) {
+                        
+                        prop = i*mult;
+                        
+                        this.store[i] += input[i]*prop;
+                        
+                        index = this.windowsize-1-i;
+                        
+                        this.store[index] += input[index]*prop;
+                    }
+                    
+                    for (var i=this.hopsize; i<this.overlap; ++i)
+                        this.store[i] += input[i];
+                    
+                }
+        
+       
+        for (var i=0; i<this.hopsize; ++i) {
+            output[i] = this.store[i];
+            
+        }
+        
+        //return result;
         
     }
     
