@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>Tracking Phase Vocoder</title>
+    </head>
+    <body>
+        
+        <h1>Tracking Phase Vocoder</h1>
+        <input type="range" min="1" max="1000" value="200" step="1" oninput="setFreqMult(this.value)" /> Set frequency multiplier<br><br>
+        <input type="range" min="1" max="100" value="40" step="1" oninput="setMaxTracks(this.value)" /> Set current maximum partial tracks<br><br>
+
+        
+        <script src="../MMLL.js"></script>
+        <script type="text/javascript">
+            
+            //slightly more efficient than SuperCollider, though running on larger blocksize of 1024 avoiding many 64 sample function calls
+            
+            "use strict";
+            
+            var tpv;
+            
+            var audioblocksize = 256; //min possible is 256
+            
+            var monobuffer = new Float32Array(audioblocksize);
+            
+            var i; //general reusable counter variable
+           
+        
+        var setup = function SetUp(sampleRate) {
+            
+            console.log("setup!");
+          
+            tpv = new MMLLTrackingPhaseVocoder(sampleRate);
+            
+        };
+        
+        var callback = function CallBack(input,output,n) {
+     
+            //just mono processing here
+            tpv.next(input.monoinput,monobuffer,n);
+            
+            //for each sample
+            for (i = 0; i < n; ++i) {
+                
+                var outputval = monobuffer[i];
+                
+                output.outputL[i] = outputval;
+                output.outputR[i] = outputval;
+                
+            }
+            
+        };
+        
+        var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+        
+        function setFreqMult(newValue) {
+            
+            var freqmult = newValue/200;
+            
+            tpv.freqmult = freqmult;
+            
+        }
+        
+        
+        function setMaxTracks(newValue) {
+            
+            var currentpeaks = newValue;
+            
+            tpv.currentpeaks = currentpeaks;
+            
+        }
+        
+        
+        </script>
+    </body>
+</html>

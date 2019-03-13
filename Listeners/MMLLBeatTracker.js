@@ -82,7 +82,7 @@ this.next = function(input,audioblocksize) {
     
     if(ready) {
        
-        var fftdata = this.stft.output;
+        var fftdata = this.stft.complex;
 
         var fftoutput = this.fftoutput;
         

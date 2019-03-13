@@ -15,11 +15,25 @@ JavaScript Web Audio API MMLL test
 
 <input type="range" min="0" max="100" value="1" step="1" oninput="setPeakThreshold(this.value)" /> Set peak power threshold<br><br>
 
+<canvas id="canvas" width="400" height="30">
+    This text is displayed if your browser does not support HTML5 Canvas.
+</canvas> Sensory dissonance from 0 to 1<br>
+
 <script src="../MMLL.js"></script>
 
 <script type="text/javascript">
     
     "use strict";
+    
+    var framespersecond = 30;
+    var millisecondsperframe = Math.ceil(1000/framespersecond);
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+    var canvasleft = canvas.offsetLeft; //need page location for canvas
+    var canvastop = canvas.offsetTop;
+    var canvaswidth = canvas.width;
+    var canvasheight = canvas.height;
+    
     
     var i; //general reusable counter variable
     
@@ -30,6 +44,7 @@ JavaScript Web Audio API MMLL test
     var phasechangepersample;
     
     var sensorydissonance;
+    var dissonance = 0;
     
     var setup = function SetUp(sampleRate) {
         
@@ -44,7 +59,7 @@ JavaScript Web Audio API MMLL test
 
 var callback = function CallBack(input,output,n) {
     
-    var dissonance = sensorydissonance.next(input.monoinput);
+    dissonance = sensorydissonance.next(input.monoinput);
     
     //dissonance modifies pitch
     phasechangepersample = (dissonance*1000 + 100)/sr;
@@ -66,11 +81,42 @@ var callback = function CallBack(input,output,n) {
 
 var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
 
+setInterval(function(){ draw(); },millisecondsperframe);
+
 function setPeakThreshold(newValue) {
     
     sensorydissonance.peakthreshold_ = newValue*0.1;
     
 }
+
+function draw() {
+    
+    // Store the current transformation matrix
+    context.save();
+    
+    // Use the identity matrix while clearing the canvas
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, canvaswidth, canvasheight);
+    
+    // Restore the transform
+    context.restore();
+    
+    //http://www.w3schools.com/cssref/css_colornames.asp
+    context.strokeStyle="#00FF00";
+    
+    context.lineWidth=30;
+    
+    context.beginPath();
+    
+    context.moveTo(0,0);
+        
+    context.lineTo(dissonance*400,0);
+
+    context.stroke();
+    
+    
+}
+
 
 </script>
 

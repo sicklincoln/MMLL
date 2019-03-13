@@ -18,12 +18,19 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
     self.audiocontext = 0;
     self.node = 0;
     self.numInputChannels = 1;
-    
+    //self.audionotrunning = 1;
+    self.audiorunning = false;
     
     
     self.initAudio = function(inputstream) {
         
         console.log('initialising audio'); //debug console message
+        
+        //delete previous if necessary
+        if (self.audiorunning) {
+            
+            self.audiocontext.close(); //let previous go
+        }
         
         //can request specific sample rate, but leaving as device's default for now
         //https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/AudioContext
@@ -76,6 +83,8 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
             
         }
         
+        self.audiorunning = true;
+        //self.audionotrunning = 0;
         
     };
     
@@ -265,12 +274,12 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
         
     };
     
-    if(self.audionotrunning) {
+    //if(self.audionotrunning) {
         
         console.log('init MMLLWebAudioSetup');
         
         //microphone input
-        if(inputtype == 1) {
+        if(inputtype == 1 || inputtype == 2) {
             
             //navigator.mediaDevices.getUserMedia
             //https://stackoverflow.com/questions/37673000/typeerror-getusermedia-called-on-an-object-that-does-not-implement-interface
@@ -291,9 +300,8 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
             
         }
         
-        self.audionotrunning = 0;
         
-    };
+    //};
     
 }
 

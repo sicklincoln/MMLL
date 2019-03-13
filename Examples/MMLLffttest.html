@@ -1,0 +1,190 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>JavaScript Web Audio API MMLL test</title>
+</head>
+
+<body>
+
+
+<canvas id="powercanvas" width="513" height="100">
+    This text is displayed if your browser does not support HTML5 Canvas.
+</canvas> Magnitude Spectrum<br>
+
+
+<canvas id="phasecanvas" width="513" height="100">
+    This text is displayed if your browser does not support HTML5 Canvas.
+</canvas> Phase Spectrum<br>
+
+
+<h1>MMLL testing FFT</h1>
+
+<p>Recent browsers supporting Web Audio API only.</p>
+
+
+<script src="../MMLL.js"></script>
+
+<script type="text/javascript">
+    
+    "use strict";
+    
+    var i; //general reusable counter variable
+    
+   var fftsize = 1024;
+   var numfftbins = fftsize/2 + 1;
+    var hopsize = 512;
+    var scalefactor = 1.0/fftsize;
+    
+    var audioblocksize = hopsize; //convenient, but extra code needed if different to output samples per block from hopsize buffer
+    
+    var framespersecond = 30;
+    var millisecondsperframe = Math.ceil(1000/framespersecond);
+    
+    var canvas = document.getElementById('powercanvas');
+    var canvas2 = document.getElementById('phasecanvas');
+    
+    var context = canvas.getContext('2d');
+    var context2 = canvas2.getContext('2d');
+    
+    var canvaswidth = canvas.width;
+    var canvasheight = canvas.height;
+    
+    var magnitudestodraw = new Float32Array(numfftbins);
+    var phasestodraw = new Float32Array(numfftbins);
+    
+    var real, imag;
+    
+    for(i=0; i<numfftbins;++i) {
+        
+        magnitudestodraw[i] = 0.0;
+        phasestodraw[i] = 0.0;
+        
+    }
+    
+    
+    var stft;
+
+    var setup = function SetUp(sampleRate) {
+        
+        stft = new MMLLSTFT(fftsize,hopsize,0); //no windowing
+    
+        setInterval(function(){ draw(); },millisecondsperframe)
+    
+    };
+
+var callback = function CallBack(input,output,n) {
+    
+    //var chord = chorddetector.next(input.monoinput);
+    
+    //not stereo, just operate on mono for now (otherwise duplicate code in parallel for left and right streams)
+    var ready = stft.next(input.monoinput);
+    
+    if(ready) {
+        
+        var fftdata = stft.complex;
+        
+        //manipulate data if you like here
+        
+        
+        //update data for drawing
+        
+        //magnitudes and phases
+        
+        for (i = 0; i < numfftbins; ++i) {
+            real = fftdata[2*i];
+            imag = fftdata[2*i+1];
+            
+            magnitudestodraw[i] = Math.sqrt((real*real + imag*imag)* scalefactor) ;
+            phasestodraw[i] = (Math.atan(imag, real) * 0.1591549430919) + 0.5; //divide by 2pi so from  -0.5 to 0.5 then add 0.5
+        
+        }
+        
+    }
+    
+    
+    
+   
+    //for each sample
+    for (i = 0; i < n; ++i) {
+        
+        output.outputL[i] = 0.;
+        output.outputR[i] = 0.;
+        
+    }
+    
+};
+
+var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+
+
+
+
+
+function draw() {
+    
+    // Store the current transformation matrix
+    context.save();
+    
+    // Use the identity matrix while clearing the canvas
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, canvaswidth, canvasheight);
+    
+    // Restore the transform
+    context.restore();
+    
+    //http://www.w3schools.com/cssref/css_colornames.asp
+    context.strokeStyle="#00FF00";
+    
+    context.lineWidth=1;
+    
+    context.beginPath();
+    
+    for (i = 0; i < numfftbins; ++i) {
+        
+        context.moveTo(i,100);
+        
+        context.lineTo(i,100-(magnitudestodraw[i]*100));
+        
+    }
+    
+    context.stroke();
+    
+    
+    // Store the current transformation matrix
+    context2.save();
+    
+    // Use the identity matrix while clearing the canvas
+    context2.setTransform(1, 0, 0, 1, 0, 0);
+    context2.clearRect(0, 0, canvaswidth, canvasheight);
+    
+    // Restore the transform
+    context2.restore();
+    
+    //http://www.w3schools.com/cssref/css_colornames.asp
+    context2.strokeStyle="#00FF00";
+    
+    context2.lineWidth=1;
+    
+    context2.beginPath();
+    
+    for (i = 0; i < numfftbins; ++i) {
+        
+        context2.moveTo(i,50);
+        
+        context2.lineTo(i,100-(phasestodraw[i]*100));
+        
+    }
+    
+    context2.stroke();
+    
+    
+}
+
+
+
+
+</script>
+
+</body>
+</html>

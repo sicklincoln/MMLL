@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>Single MMLLGammatone filter test</title>
+    </head>
+    <body>
+        
+        <h1>Gammatone filter bank on audio input drives cross synthesis</h1>
+        
+        <p>
+        Browsers supporting Web Audio API only.
+        </p>
+        
+        <script src="../MMLL.js"></script>
+        <script type="text/javascript">
+            
+            //slightly more efficient than SuperCollider, though running on larger blocksize of 1024 avoiding many 64 sample function calls
+            
+            "use strict";
+            
+            var gammatone, haircell;
+            
+            var audioblocksize = 1024; //min possible is 256
+            
+            var monobuffer = new Float64Array(audioblocksize);
+            
+            var i; //general reusable counter variable
+           
+        
+        var setup = function SetUp(sampleRate) {
+            
+            console.log("setup!");
+            
+            gammatone = new MMLLGammatone(sampleRate);
+             
+            gammatone.setup(1000,200);
+            
+            haircell = new MMLLHairCell(sampleRate);
+            
+        };
+        
+        var callback = function CallBack(input,output,n) {
+     
+            //single gammatone filter test
+            gammatone.next(input.monoinput,monobuffer,n);
+            
+            haircell.next(monobuffer,monobuffer,n);
+            
+            //for each sample
+            for (i = 0; i < n; ++i) {
+                
+                var outputval = monobuffer[i];
+                
+                output.outputL[i] = outputval;
+                output.outputR[i] = outputval;
+                
+            }
+            
+        };
+        
+        var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+        
+        </script>
+    </body>
+</html>

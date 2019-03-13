@@ -3,11 +3,12 @@
 function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,audiofileload=true) {
  
     var self = this;
-    this.audionotrunning = true;
-    this.webaudio;
-    this.audioblocksize = audioblocksize;
-    this.callback = callback;
-    this.setup = setup;
+    self.audionotrunning = true;
+    self.webaudio;
+    self.audioblocksize = audioblocksize;
+    self.callback = callback;
+    self.setup = setup;
+    self.textnode;
     
 //    <button onclick="initMic()">Open Microphone</button><br>
 //    <button onclick="document.getElementById('file-input').click();">Open Audio File</button>
@@ -22,11 +23,11 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
 
     if(microphone) {
         
-    this.openmicbutton = document.createElement("BUTTON");        // Create a <button> element
+    self.openmicbutton = document.createElement("BUTTON");        // Create a <button> element
     var t = document.createTextNode("Open Microphone");       // Create a text node
-    this.openmicbutton.appendChild(t);                                // Append the text to <button>
+    self.openmicbutton.appendChild(t);                                // Append the text to <button>
     
-        this.openmicbutton.onclick = function() {
+        self.openmicbutton.onclick = function() {
             
             if(self.audionotrunning) {
                 
@@ -35,22 +36,29 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
                 self.audionotrunning = false;
             }
             
+          
+            self.openmicbutton.parentNode.removeChild(self.openmicbutton);
+            if(audiofileload)
+                self.openaudiofilebutton.parentNode.removeChild(self.openaudiofilebutton);
+            document.body.removeChild(textnode);
+            
             
         }
     
-    document.body.appendChild(this.openmicbutton);                    // Append <button> to <body>
+    document.body.appendChild(self.openmicbutton);                    // Append <button> to <body>
     
     }
    
-    document.body.appendChild(document.createTextNode(' --- '));
+    self.textnode = document.createTextNode(' --- ');
+    document.body.appendChild(textnode);
     
     if(audiofileload) {
         
-        this.inputfile = document.createElement('input');
-        this.inputfile.type = "file";
-        this.inputfile.style = "display: none;";
+        self.inputfile = document.createElement('input');
+        self.inputfile.type = "file";
+        self.inputfile.style = "display: none;";
         
-        this.inputfile.addEventListener("change",function uploadFile()
+        self.inputfile.addEventListener("change",function uploadFile()
                                     {
                                     console.log(self.inputfile.files[0],self.inputfile.files[0].name);
                                     
@@ -67,26 +75,33 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
                                     
                                     }, false);
         
-        document.body.appendChild(this.inputfile);
+        document.body.appendChild(self.inputfile);
         
-        this.openaudiofilebutton = document.createElement("BUTTON");
+        self.openaudiofilebutton = document.createElement("BUTTON");
         var t = document.createTextNode("Open Audio File");
-        this.openaudiofilebutton.appendChild(t);
+        self.openaudiofilebutton.appendChild(t);
         
         
-        this.openaudiofilebutton.onclick = function() {
+        self.openaudiofilebutton.onclick = function() {
         self.inputfile.click();
+            
+        self.openaudiofilebutton.parentNode.removeChild(self.openaudiofilebutton);
+            if(microphone)
+        self.openmicbutton.parentNode.removeChild(self.openmicbutton);
+        document.body.removeChild(textnode);
+            
+            
         };
         
        
-        document.body.appendChild(this.openaudiofilebutton);
+        document.body.appendChild(self.openaudiofilebutton);
         
         
     }
     
     
     
-//    this.whateverfunction = function(inputarg) {
+//    self.whateverfunction = function(inputarg) {
 //        
 //        console.log('initialise GUI'); //debug console message
 //    
