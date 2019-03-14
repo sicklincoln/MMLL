@@ -10707,9 +10707,11 @@ function MMLLSamplePlayer() {
                 
                 datasource = this.buffer.dataL;
                 
-                temp = datasource[pos+i];
-                
+               
                 for (i = 0; i < samplestodo; ++i) {
+                    
+                    temp = datasource[pos+i];
+                    
                     outputL[i] += temp; //pos will be zero here since only use offset on first block, however keep code as is in case later have playback of sample starting in middle etc
                     
                     outputR[i] += temp;
