@@ -11076,11 +11076,27 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
             
         } else {
             
+            
+            if(self.inputtype == 0) {
+             
+                //no input
+                
+                self.node = self.audiocontext.createScriptProcessor(self.audioblocksize,0,2); //0 input, 2 outputs
+                self.node.onaudioprocess = self.synthesizeAudio;
+                
+                //direct synthesis
+                self.node.connect(self.audiocontext.destination);
+                
+            
+            } else {
+            
             //            self.node = self.audiocontext.createScriptProcessor(self.audioblocksize,0,2); //0 input, 2 outputs
             //
             //            self.node.onaudioprocess = self.processSoundFile;
             //
             self.initSoundFileRead(self.inputtype);
+                
+            }
             
         }
         
@@ -11127,6 +11143,29 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
                             });
         
     };
+    
+    self.synthesizeAudio = function(event) {
+       
+        // Get output arrays
+        var outputArrayL = event.outputBuffer.getChannelData(0);
+        var outputArrayR = event.outputBuffer.getChannelData(1);
+        
+        //number of samples to calculate is based on (common) length of these buffers
+        var n = outputArrayL.length;
+        
+        var i;
+        
+        //safety, zero out output if accumulating to it
+        for (var i = 0; i < n; ++i) outputArrayL[i] = outputArrayR[i] = 0.0;
+        
+        self.outputAudio.outputL = outputArrayL;
+        self.outputAudio.outputR = outputArrayR;
+        
+        //no input argument, just synthesise output entirely
+        self.callback(self.outputAudio,n);
+        
+    };
+    
     
     
     self.processSoundFile = function(event) {

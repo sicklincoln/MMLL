@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>A</title>
+</head>
+
+<body>
+
+
+<button onclick="init()">Play A</button>
+
+<script src="../MMLL.js"></script>
+
+<script>
+    
+    var i;
+    
+    var audioblocksize = 512; //
+    var sintablesize = 1024;
+    var sintable = new Float32Array(sintablesize+1); //with guard element
+ 
+ var phase = 0.0;
+ var phaseupdate;
+ 
+    var setup = function SetUp(sampleRate) {
+        
+        phaseupdate = 1024.0 /(sampleRate/440); //in terms of wavetable samples, concert A
+        
+        for (i = 0; i <= sintablesize ; ++i)
+        sintable[i] = Math.sin(6.2831853071796*i/sintablesize);
+        
+    };
+
+var callback = function CallBack(output,n) {
+    
+    var outputval;
+    
+    for (i = 0; i < n; ++i) {
+        
+        outputval = 0.3 * sintable[Math.floor(phase)];
+        
+        phase = (phase + phaseupdate)%sintablesize;
+        
+        output.outputL[i] = outputval;
+        output.outputR[i] = outputval;
+    }
+    
+};
+
+var init = function() {MMLLWebAudioSetup(audioblocksize,0,callback,setup);}
+
+
+</script>
+
+</body> </html>
