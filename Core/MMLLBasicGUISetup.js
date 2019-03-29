@@ -21,6 +21,50 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
 //    var canvas = document.getElementById('canvas');
 //    var context = canvas.getContext('2d');
 
+    self.createStopButton = function() {
+        
+        self.stopbutton = document.createElement("BUTTON");        // Create a <button> element
+        var t = document.createTextNode("Stop Audio");       // Create a text node
+        self.stopbutton.appendChild(t);                                // Append the text to
+        
+        self.stopbutton.onclick = function() {
+            
+            if(self.audionotrunning==false) {
+                
+                //stop audio
+                
+                self.webaudio.audiocontext.close();
+                
+                self.audionotrunning = true;
+                
+                self.stopbutton.parentNode.removeChild(self.stopbutton);
+                
+                self.initGUI();
+                
+//                self.webaudio.context.close().then(function() {
+//                            
+//                                                   //reset GUI for new audio
+//                                           self.stopbutton.parentNode.removeChild(self.stopbutton);
+//                                                   
+//                                            self.initGUI();
+//                                                   });
+//                await self.webaudio.context.close();
+//                
+            }
+            
+            
+   
+            
+        }
+        
+        document.body.appendChild(self.stopbutton);                    // Append <button> to <body>
+
+        
+    };
+    
+    
+    self.initGUI = function() {
+    
     if(microphone) {
         
     self.openmicbutton = document.createElement("BUTTON");        // Create a <button> element
@@ -31,7 +75,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
             
             if(self.audionotrunning) {
                 
-                self.webaudio = MMLLWebAudioSetup(self.audioblocksize,1,self.callback,self.setup);
+                self.webaudio = new MMLLWebAudioSetup(self.audioblocksize,1,self.callback,self.setup);
                 
                 self.audionotrunning = false;
             }
@@ -41,6 +85,8 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
             if(audiofileload)
                 self.openaudiofilebutton.parentNode.removeChild(self.openaudiofilebutton);
             document.body.removeChild(textnode);
+            
+            self.createStopButton();
             
             
         }
@@ -66,7 +112,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
                                     if(self.audionotrunning) {
                                     
                                     //pass in filename or 1 for audio input
-                                    self.webaudio = MMLLWebAudioSetup(self.audioblocksize,self.inputfile.files[0],self.callback,self.setup);
+                                    self.webaudio = new MMLLWebAudioSetup(self.audioblocksize,self.inputfile.files[0],self.callback,self.setup);
                                     
                                     //webaudio.initSoundFileRead(file_input.files[0]);
                                     
@@ -90,6 +136,8 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
         self.openmicbutton.parentNode.removeChild(self.openmicbutton);
         document.body.removeChild(textnode);
             
+            self.createStopButton();
+            
             
         };
         
@@ -99,7 +147,9 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
         
     }
     
+    };
     
+    self.initGUI();
     
 //    self.whateverfunction = function(inputarg) {
 //        

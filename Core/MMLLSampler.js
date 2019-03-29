@@ -6,27 +6,33 @@
 //shared between Sampler and MMLLWebAudioSetup
 function MMLLInputAudio(blocksize)
 {
-	this.monoinput = new Float32Array(blocksize);
-	this.inputL = new Float32Array(blocksize);
-	this.inputR = new Float32Array(blocksize);
-    this.numChannels = 1;
+    var self = this;
+    
+	self.monoinput = new Float32Array(blocksize);
+	self.inputL = new Float32Array(blocksize);
+	self.inputR = new Float32Array(blocksize);
+    self.numChannels = 1;
 }
 function MMLLOutputAudio(blocksize)
 {
-	this.outputL = new Float32Array(blocksize);
-	this.ouputR = new Float32Array(blocksize);
+    var self = this;
+    
+	self.outputL = new Float32Array(blocksize);
+	self.ouputR = new Float32Array(blocksize);
 }
 
 
 //no longer uses interleaved audio if multiple channels
 function MMLLBuffer() {
     
-    this.dataL = 0;
-    this.dataR = 0;
-    this.length = 0;
-    this.duration = 0;
-    this.sampleRate = 44100.0;
-    this.numChannels = 1; //unless otherwise
+    var self = this;
+    
+    self.dataL = 0;
+    self.dataR = 0;
+    self.length = 0;
+    self.duration = 0;
+    self.sampleRate = 44100.0;
+    self.numChannels = 1; //unless otherwise
 
     
 }
@@ -35,30 +41,32 @@ function MMLLBuffer() {
 //contains state for block by block playback of a mono OR stereo buffer object
 function MMLLSamplePlayer() {
     
-    this.buffer = 0;
-    this.playbackposition = 0;
-    this.lengthinsampleframes = 0;
-    this.numChannels  = 1;
-    this.playing = 0;
-    this.offset = 0;
+    var self = this;
+    
+    self.buffer = 0;
+    self.playbackposition = 0;
+    self.lengthinsampleframes = 0;
+    self.numChannels  = 1;
+    self.playing = 0;
+    self.offset = 0;
     
     //mix settings for pan and amplitude come later? //to a stereo output bus
-    //this.amp = 0.4;
-    //this.pan = 0.0;
+    //self.amp = 0.4;
+    //self.pan = 0.0;
  
     
-    this.reset = function(buffer) {
+    self.reset = function(buffer) {
         
         if(buffer!= null) {
-            this.buffer = buffer;
+            self.buffer = buffer;
             
-            this.lengthinsampleframes = buffer.length;
+            self.lengthinsampleframes = buffer.length;
             
-            this.numChannels = buffer.numChannels;
+            self.numChannels = buffer.numChannels;
         }
         
-        this.playbackposition = 0;
-        this.playing = 1;
+        self.playbackposition = 0;
+        self.playing = 1;
         
     }
     
@@ -68,20 +76,20 @@ function MMLLSamplePlayer() {
     //CHECK FOR STEREO COMPATIBILITY
     
     //arrayL, arrayR not stereo rendering
-    this.render = function(inputaudio, numSamples) {
+    self.render = function(inputaudio, numSamples) {
         
         var i;
         
-        var samplesleft = this.lengthinsampleframes - this.playbackposition; //this.buffer.length;
+        var samplesleft = self.lengthinsampleframes - self.playbackposition; //self.buffer.length;
         
-        var datasource,datasource2; // = this.buffer.data;
+        var datasource,datasource2; // = self.buffer.data;
         
-        var offset = this.offset;
+        var offset = self.offset;
         
         var baseindex, sourceinde
         
         //must make copy else changing original reference and messing up rendering for other active events?
-        //actually, probably OK, but will keep this way while debugging an issue right now
+        //actually, probably OK, but will keep self way while debugging an issue right now
         var numsamplesnow = numSamples;
         
         numsamplesnow -= offset;
@@ -90,10 +98,10 @@ function MMLLSamplePlayer() {
 
         if(numsamplesnow>samplesleft) {
             samplestodo = samplesleft;
-             this.playing = 0;
+             self.playing = 0;
         }
         
-        var pos = this.playbackposition;
+        var pos = self.playbackposition;
         
         var outputL = inputaudio.inputL;
         var outputR = inputaudio.inputR;
@@ -103,9 +111,9 @@ function MMLLSamplePlayer() {
         var temp;
         if(offset>0) {
             
-            if(this.numChannels ==1) {
+            if(self.numChannels ==1) {
             
-                datasource = this.buffer.dataL;
+                datasource = self.buffer.dataL;
                 
             for (i = 0; i < samplestodo; ++i) {
                 
@@ -119,8 +127,8 @@ function MMLLSamplePlayer() {
                 
             } else {
                 
-                datasource = this.buffer.dataL;
-                datasource2 = this.buffer.dataR;
+                datasource = self.buffer.dataL;
+                datasource2 = self.buffer.dataR;
                 
                 for (i = 0; i < samplestodo; ++i) {
                     temp = offset+i;
@@ -144,14 +152,14 @@ function MMLLSamplePlayer() {
             }
             
             //only active in first block rendered
-            this.offset = 0;
+            self.offset = 0;
             
         } else
         {
             
-            if(this.numChannels ==1) {
+            if(self.numChannels ==1) {
                 
-                datasource = this.buffer.dataL;
+                datasource = self.buffer.dataL;
                 
                
                 for (i = 0; i < samplestodo; ++i) {
@@ -173,8 +181,8 @@ function MMLLSamplePlayer() {
                 
             } else {
                 
-                datasource = this.buffer.dataL;
-                datasource2 = this.buffer.dataR;
+                datasource = self.buffer.dataL;
+                datasource2 = self.buffer.dataR;
                 
                 for (i = 0; i < samplestodo; ++i) {
                     outputL[i] += datasource[pos+i];
@@ -198,7 +206,7 @@ function MMLLSamplePlayer() {
             
         }
         
-        this.playbackposition += samplestodo;
+        self.playbackposition += samplestodo;
         
        
         
@@ -212,15 +220,17 @@ function MMLLSamplePlayer() {
 
 function MMLLSampler() {
     
+    //https://stackoverflow.com/questions/20279484/how-to-access-the-correct-this-inside-a-callback
+    var self = this;
     
-    this.loadcounter = 0;
-    this.buffers = 0;
+    self.loadcounter = 0;
+    self.buffers = 0;
     
-    this.loadSamples = function(arrayofpaths, onloadfunction) {
+    self.loadSamples = function(arrayofpaths, onloadfunction, audiocontext) {
         
-        this.numbuffers = arrayofpaths.length;
+        self.numbuffers = arrayofpaths.length;
         
-        this.buffers = new Array(this.numbuffers);
+        self.buffers = new Array(self.numbuffers);
         
         for(var i=0; i<arrayofpaths.length; ++i) {
             
@@ -230,11 +240,11 @@ function MMLLSampler() {
             
             if(typeof(nowtoload)==='string') {
             
-            this.loadSample(nowtoload,onloadfunction,i);
+            self.loadSample(nowtoload,onloadfunction,i,audiocontext);
                 
             } else {
                 
-            this.loadSample2(nowtoload,onloadfunction,i);
+            self.loadSample2(nowtoload,onloadfunction,i,audiocontext);
                 
             }
             
@@ -246,10 +256,8 @@ function MMLLSampler() {
     
  
     
-    this.loadSample2 = function(fileobject,onloadfunction,index) {
-        
-        //https://stackoverflow.com/questions/20279484/how-to-access-the-correct-this-inside-a-callback
-        var self = this;
+    self.loadSample2 = function(fileobject,onloadfunction,index,audiocontext) {
+     
         
         //http://composerprogrammer.com/music/demo1.mp3
         
@@ -311,7 +319,7 @@ function MMLLSampler() {
                                          }
                                          
                                        
-                                         //console.log('buffer loaded test 1',self,this,self.loadcounter,filename,buf.length,buf.duration, buf.sampleRate); //print
+                                         //console.log('buffer loaded test 1',self,self,self.loadcounter,filename,buf.length,buf.duration, buf.sampleRate); //print
                                          
                                          
                                          //console.log('buffer loaded test 2',self.loadcounter,filename,buffernow.length,buffernow.sampleRate,self.buffers); //print
@@ -340,14 +348,12 @@ function MMLLSampler() {
     }
     
     
-    this.loadSample = function(filename,onloadfunction,index) {
+    self.loadSample = function(filename,onloadfunction,index,audiocontext) {
         
         var request = new XMLHttpRequest();
  
         //var filename = "loop"+which+".wav";
         
-        //https://stackoverflow.com/questions/20279484/how-to-access-the-correct-this-inside-a-callback
-        var self = this;
         
         //http://composerprogrammer.com/music/demo1.mp3
         request.open('GET', filename, true); //viper.ogg
@@ -414,7 +420,7 @@ function MMLLSampler() {
 //                                         buffernow.duration = buf.duration;
 //                                         buffernow.sampleRate = buf.sampleRate;
 //                                         
-//                                          //console.log('buffer loaded test 1',self,this,self.loadcounter,filename,buf.length,buf.duration, buf.sampleRate); //print
+//                                          //console.log('buffer loaded test 1',self,self,self.loadcounter,filename,buf.length,buf.duration, buf.sampleRate); //print
                                          
                                          
                                          //console.log('buffer loaded test 2',self.loadcounter,filename,buffernow.length,buffernow.sampleRate,self.buffers); //print

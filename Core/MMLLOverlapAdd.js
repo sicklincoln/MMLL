@@ -6,73 +6,75 @@
 
 function MMLLOverlapAdd(windowsize=1024,hopsize=512,windowtype=0) {
     
-    this.windowsize = windowsize;
+    var self = this;
+    
+    self.windowsize = windowsize;
     
     if(hopsize>windowsize) hopsize = windowsize;
     
-    this.hopsize = hopsize;
-    this.overlap = windowsize - hopsize;
+    self.hopsize = hopsize;
+    self.overlap = windowsize - hopsize;
     
-    this.store = new Array(windowsize);
+    self.store = new Array(windowsize);
     
-    //start zeroed, will be summing to this buffer
-    for (var ii=0; ii<this.windowsize; ++ii)
-        this.store[ii] = 0;
+    //start zeroed, will be summing to self buffer
+    for (var ii=0; ii<self.windowsize; ++ii)
+        self.store[ii] = 0;
         
-    //this.outputpointer = 0; //this.overlap;
+    //self.outputpointer = 0; //self.overlap;
 
     //input is windowsize long, output will be hopsize long
-    this.next = function(input,output) {
+    self.next = function(input,output) {
  
         //copy data backwards in store by hopsize
         
         var i;
         
-        for (i=0; i<this.overlap; ++i) {
+        for (i=0; i<self.overlap; ++i) {
             
-            this.store[i] = this.store[this.hopsize+i];
+            self.store[i] = self.store[self.hopsize+i];
         }
         
         //zero end part
         
-        for (i=0; i<this.hopsize; ++i) {
+        for (i=0; i<self.hopsize; ++i) {
             
-            this.store[this.hopsize+i] = 0.0;
+            self.store[self.hopsize+i] = 0.0;
         }
         
         //sum in new data, windowed appropriately
         
         if(windowtype==0) {
             
-            for (var i=0; i<this.windowsize; ++i)
-                this.store[i] += input[i];
+            for (var i=0; i<self.windowsize; ++i)
+                self.store[i] += input[i];
             
                 } else {
                     
                     //triangular windows for linear cross fade for now...
                     var prop;
-                    var mult = 1.0/this.hopsize;
+                    var mult = 1.0/self.hopsize;
                     var index;
                     
-                    for (var i=0; i<this.hopsize; ++i) {
+                    for (var i=0; i<self.hopsize; ++i) {
                         
                         prop = i*mult;
                         
-                        this.store[i] += input[i]*prop;
+                        self.store[i] += input[i]*prop;
                         
-                        index = this.windowsize-1-i;
+                        index = self.windowsize-1-i;
                         
-                        this.store[index] += input[index]*prop;
+                        self.store[index] += input[index]*prop;
                     }
                     
-                    for (var i=this.hopsize; i<this.overlap; ++i)
-                        this.store[i] += input[i];
+                    for (var i=self.hopsize; i<self.overlap; ++i)
+                        self.store[i] += input[i];
                     
                 }
         
        
-        for (var i=0; i<this.hopsize; ++i) {
-            output[i] = this.store[i];
+        for (var i=0; i<self.hopsize; ++i) {
+            output[i] = self.store[i];
             
         }
         

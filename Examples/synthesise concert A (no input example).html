@@ -7,6 +7,7 @@
 
 
 <button onclick="init()">Play A</button>
+<button onclick="kill()">Stop A</button>
 
 <script src="../MMLL.js"></script>
 
@@ -20,6 +21,8 @@
  
  var phase = 0.0;
  var phaseupdate;
+ 
+ var webaudio = null;
  
     var setup = function SetUp(sampleRate) {
         
@@ -46,7 +49,8 @@ var callback = function CallBack(output,n) {
     
 };
 
-var init = function() {MMLLWebAudioSetup(audioblocksize,0,callback,setup);}
+var init = function() {if(webaudio == null) {webaudio = new MMLLWebAudioSetup(audioblocksize,0,callback,setup);}}
+var kill = function() {if(webaudio!=null) {webaudio.audiocontext.close(); webaudio = null; }}
 
 
 </script>

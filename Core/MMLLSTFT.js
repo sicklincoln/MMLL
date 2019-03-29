@@ -3,87 +3,90 @@
 
 function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
     
-    this.fftsize = fftsize;
-    this.halffftsize = fftsize/2;
-    this.windowtype = windowtype;
-    this.postfftfunction = postfftfunction;
+    var self = this;
     
-    this.windowing= new MMLLwindowing(this.fftsize,this.halffftsize);
-    //this.fft = new MMLLFFT(); //
-    this.fft = new FFTR(fftsize);
+    self.fftsize = fftsize;
+    self.hopsize = hopsize; //typically halffftsize, but windowing should cope otherwise too
+    self.halffftsize = fftsize/2;
+    self.windowtype = windowtype;
+    self.postfftfunction = postfftfunction;
     
-    //this.fft.setupFFT(fftsize);
+    self.windowing= new MMLLwindowing(self.fftsize,self.hopsize);
+    //self.fft = new MMLLFFT(); //
+    self.fft = new FFTR(fftsize);
     
-    this.windowdata = new Float32Array(this.fftsize); //begins as zeroes
-    this.hanning = new Float32Array(this.fftsize);
+    //self.fft.setupFFT(fftsize);
     
-    var ang=(2.0*Math.PI)/this.fftsize;
+    self.windowdata = new Float32Array(self.fftsize); //begins as zeroes
+    self.hanning = new Float32Array(self.fftsize);
+    
+    var ang=(2.0*Math.PI)/self.fftsize;
     
     for(var i=0;i<fftsize;++i)
-        this.hanning[i]=0.5 - 0.5*Math.cos(ang*i);
+        self.hanning[i]=0.5 - 0.5*Math.cos(ang*i);
     
     //initialised containing zeroes
-    this.powers = new Float32Array(this.halffftsize);
+    self.powers = new Float32Array(self.halffftsize);
     //var freqs = result.subarray(result.length / 2);
-    this.reals = new Float32Array(this.fftsize);
+    self.reals = new Float32Array(self.fftsize);
     
-    this.complex = new Float32Array(this.fftsize+2);
+    self.complex = new Float32Array(self.fftsize+2);
     
-    //this.imags = new Float32Array(this.fftsize);
+    //self.imags = new Float32Array(self.fftsize);
     
     //4 =2*2 compensates for half magnitude if only take non-conjugate part, fftsize compensates for 1/N
-    this.fftnormmult = 4*this.fftsize; //*fftsize;// /4; //1.0/fftsize;  or 1/(fftsize.sqrt)
+    self.fftnormmult = 4*self.fftsize; //*fftsize;// /4; //1.0/fftsize;  or 1/(fftsize.sqrt)
     
-    this.next = function(input) {
+    self.next = function(input) {
         
         //update by audioblocksize samples
-        var ready = this.windowing.next(input);
+        var ready = self.windowing.next(input);
         
         if(ready) {
             
             //no window function (square window)
-            if(this.windowtype==0) {
-            for (i = 0; i< this.fftsize; ++i) {
-                this.reals[i] = this.windowing.store[i]; //*hanning[i];
-                //this.imags[i] = 0.0;
+            if(self.windowtype==0) {
+            for (i = 0; i< self.fftsize; ++i) {
+                self.reals[i] = self.windowing.store[i]; //*hanning[i];
+                //self.imags[i] = 0.0;
                 
             }
             } else {
-                for (i = 0; i< this.fftsize; ++i) {
-                    this.reals[i] = this.windowing.store[i]*this.hanning[i];
-                    //this.imags[i] = 0.0;
+                for (i = 0; i< self.fftsize; ++i) {
+                    self.reals[i] = self.windowing.store[i]*self.hanning[i];
+                    //self.imags[i] = 0.0;
                     
                 }
             }
   
             //fft library call
-            //this.fft.transform(this.reals, this.imags);
-            //var output = this.fft.forward(this.reals);
+            //self.fft.transform(self.reals, self.imags);
+            //var output = self.fft.forward(self.reals);
             
-            this.fft.forward(this.reals,this.complex);
+            self.fft.forward(self.reals,self.complex);
             
             //output format is interleaved k*2, k*2+1 real and imag parts
             //DC and 0 then bin 1 real and imag ... nyquist and 0
             
             //power spectrum not amps, for comparative testing
-            for (var k = 0; k < this.halffftsize; ++k) {
+            for (var k = 0; k < self.halffftsize; ++k) {
                 //Math.sqrt(
                 var twok = 2*k;
-                //this.powers[k] = ((output[twok] * output[twok]) + (output[twok+1] * output[twok+1]) ); // * fftnormmult;
+                //self.powers[k] = ((output[twok] * output[twok]) + (output[twok+1] * output[twok+1]) ); // * fftnormmult;
                 
-                this.powers[k] = ((this.complex[twok] * this.complex[twok]) + (this.complex[twok+1] * this.complex[twok+1]) );
+                self.powers[k] = ((self.complex[twok] * self.complex[twok]) + (self.complex[twok+1] * self.complex[twok+1]) );
                 
                 //will scale later in onset detector itself
                 
-                //this.powers[k] = ((this.reals[k] * this.reals[k]) + (this.imags[k] * this.imags[k]) ); // * fftnormmult;
+                //self.powers[k] = ((self.reals[k] * self.reals[k]) + (self.imags[k] * self.imags[k]) ); // * fftnormmult;
                 
                 //freqs[k - align] = (2 * k / N) * (sample_rate / 2);
             }
             
-            //console.log(this.postfftfunction,'undefined');
+            //console.log(self.postfftfunction,'undefined');
             
-            if(this.postfftfunction !== undefined)
-            this.postfftfunction(this.powers,this.complex); //could pass this.complex as second argument to get phase spectrum etc
+            if(self.postfftfunction !== undefined)
+            self.postfftfunction(self.powers,self.complex); //could pass self.complex as second argument to get phase spectrum etc
             
             
         }

@@ -145,22 +145,24 @@ var FFTR = function (size) {
 //MMLL = Musical Machine Listening Library MMLL.js
 function MMLLwindowing(windowsize=1024,hopsize=512) {
     
-    this.windowsize = windowsize;
+    var self = this;
+    
+    self.windowsize = windowsize;
     
     if(hopsize>windowsize) hopsize = windowsize;
     
-    this.hopsize = hopsize;
-    this.overlap = windowsize - hopsize;
+    self.hopsize = hopsize;
+    self.overlap = windowsize - hopsize;
     
-    this.store = new Array(windowsize);
+    self.store = new Array(windowsize);
     
     //only zero old data
-    for (var ii=0; ii<this.overlap; ++ii)
-        this.store[ii] = 0;
+    for (var ii=0; ii<self.overlap; ++ii)
+        self.store[ii] = 0;
         
-    this.storepointer = this.overlap;
+    self.storepointer = self.overlap;
 
-    this.next = function(input) {
+    self.next = function(input) {
         
         var n = input.length; //code assumes n divides hopsize
         
@@ -169,34 +171,34 @@ function MMLLwindowing(windowsize=1024,hopsize=512) {
         
         //if just output a window of data
         //copy and update storepointer position
-        if(this.storepointer>=this.windowsize) {
+        if(self.storepointer>=self.windowsize) {
             
-            for (var i=0; i<this.overlap; ++i)
-                this.store[i] = this.store[this.hopsize+i];
+            for (var i=0; i<self.overlap; ++i)
+                self.store[i] = self.store[self.hopsize+i];
                 
-                this.storepointer = this.overlap;
+                self.storepointer = self.overlap;
            
             
             
         }
         
-        if((this.storepointer+n)>=this.windowsize) {
-            n = this.windowsize - this.storepointer;
+        if((self.storepointer+n)>=self.windowsize) {
+            n = self.windowsize - self.storepointer;
             //just in case doesn't fit exactly, don't bother if really going to wrap around since unresolvable issue if  overwrite buffer or multiple wraps in one go anyway
             
             result = true;
             
         }
         for (var i=0; i<n; ++i) {
-            this.store[this.storepointer+i] = input[i];
+            self.store[self.storepointer+i] = input[i];
             
         }
         
         
-        this.storepointer = (this.storepointer + n); //%(this.windowsize);
+        self.storepointer = (self.storepointer + n); //%(self.windowsize);
      
         
-//        if(this.storepointer ==0) {
+//        if(self.storepointer ==0) {
 //         
 //            console.log("back to zero index");
 //        }
@@ -218,12 +220,12 @@ function MMLLwindowing(windowsize=1024,hopsize=512) {
  * https://www.nayuki.io/page/free-small-fft-in-multiple-languages
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
+ * self software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * - The above copyright notice and this permission notice shall be included in
+ * - The above copyright notice and self permission notice shall be included in
  *   all copies or substantial portions of the Software.
  * - The Software is provided "as is", without warranty of any kind, express or
  *   implied, including but not limited to the warranties of merchantability,
@@ -241,11 +243,13 @@ function MMLLwindowing(windowsize=1024,hopsize=512) {
 
 function MMLLFFT() {
     
-    this.cosTable = 0;
-    this.sinTable = 0;
+    var self = this;
+    
+    self.cosTable = 0;
+    self.sinTable = 0;
 
     
-    this.setupFFT = function(n) {
+    self.setupFFT = function(n) {
         
         
             //pre calculate
@@ -255,12 +259,12 @@ function MMLLFFT() {
             //if ((n & (n - 1)) == 0)  // Is power of 2, e.g. no overlap of bit pattern since n as 2^k introduces new bit over 2^k-1
             //{
                 
-                this.cosTable = new Array(n / 2);
-                this.sinTable = new Array(n / 2);
+                self.cosTable = new Array(n / 2);
+                self.sinTable = new Array(n / 2);
                 
                 for (var i = 0; i < n / 2; i++) {
-                    this.cosTable[i] = Math.cos(2 * Math.PI * i / n);
-                    this.sinTable[i] = Math.sin(2 * Math.PI * i / n);
+                    self.cosTable[i] = Math.cos(2 * Math.PI * i / n);
+                    self.sinTable[i] = Math.sin(2 * Math.PI * i / n);
                 }
                 
 //            }
@@ -268,12 +272,12 @@ function MMLLFFT() {
 //            {
 //                
 //                // Trignometric tables
-//                this.cosTable = new Array(n);
-//                this.sinTable = new Array(n);
+//                self.cosTable = new Array(n);
+//                self.sinTable = new Array(n);
 //                for (var i = 0; i < n; i++) {
 //                    var j = i * i % (n * 2);  // This is more accurate than j = i * i
-//                    this.cosTable[i] = Math.cos(Math.PI * j / n);
-//                    this.sinTable[i] = Math.sin(Math.PI * j / n);
+//                    self.cosTable[i] = Math.cos(Math.PI * j / n);
+//                    self.sinTable[i] = Math.sin(Math.PI * j / n);
 //                }
 //                
 //            }
@@ -293,7 +297,7 @@ function MMLLFFT() {
  * The vector's length must be a power of 2. Uses the Cooley-Tukey decimation-in-time radix-2 algorithm.
  */
     //transformRadix2
-this.transform = function (real, imag) {
+self.transform = function (real, imag) {
 	// Length variables
 	var n = real.length;
 	if (n != imag.length)
@@ -330,8 +334,8 @@ this.transform = function (real, imag) {
 		for (var i = 0; i < n; i += size) {
 			for (var j = i, k = 0; j < i + halfsize; j++, k += tablestep) {
 				var l = j + halfsize;
-				var tpre =  real[l] * this.cosTable[k] + imag[l] * this.sinTable[k];
-				var tpim = -real[l] * this.sinTable[k] + imag[l] * this.cosTable[k];
+				var tpre =  real[l] * self.cosTable[k] + imag[l] * self.sinTable[k];
+				var tpim = -real[l] * self.sinTable[k] + imag[l] * self.cosTable[k];
 				real[l] = real[j] - tpre;
 				imag[l] = imag[j] - tpim;
 				real[j] += tpre;
@@ -356,7 +360,7 @@ this.transform = function (real, imag) {
      * Computes the discrete Fourier transform (DFT) of the given complex vector, storing the result back into the vector.
      * The vector can have any length. This is a wrapper function.
      */
-//    this.transform = function(real,imag) {
+//    self.transform = function(real,imag) {
 //        
 //        //console.log('check', cosTable.length,sinTable.length, real.length);
 //        
@@ -366,7 +370,7 @@ this.transform = function (real, imag) {
 //        if (n == 0)
 //            return;
 //        else if ((n & (n - 1)) == 0)  // Is power of 2
-//            this.transformRadix2(real, imag);
+//            self.transformRadix2(real, imag);
 //        else  // More complicated algorithm for arbitrary sizes
 //            transformBluestein(real, imag);
 //    }
@@ -406,7 +410,7 @@ this.transform = function (real, imag) {
 //	}
 //	inverseTransform(xreal, ximag);
 //	
-//	for (var i = 0; i < n; i++) {  // Scaling (because this FFT implementation omits it)
+//	for (var i = 0; i < n; i++) {  // Scaling (because self FFT implementation omits it)
 //		outreal[i] = xreal[i] / n;
 //		outimag[i] = ximag[i] / n;
 //	}
@@ -482,87 +486,90 @@ this.transform = function (real, imag) {
 
 function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
     
-    this.fftsize = fftsize;
-    this.halffftsize = fftsize/2;
-    this.windowtype = windowtype;
-    this.postfftfunction = postfftfunction;
+    var self = this;
     
-    this.windowing= new MMLLwindowing(this.fftsize,this.halffftsize);
-    //this.fft = new MMLLFFT(); //
-    this.fft = new FFTR(fftsize);
+    self.fftsize = fftsize;
+    self.hopsize = hopsize; //typically halffftsize, but windowing should cope otherwise too
+    self.halffftsize = fftsize/2;
+    self.windowtype = windowtype;
+    self.postfftfunction = postfftfunction;
     
-    //this.fft.setupFFT(fftsize);
+    self.windowing= new MMLLwindowing(self.fftsize,self.hopsize);
+    //self.fft = new MMLLFFT(); //
+    self.fft = new FFTR(fftsize);
     
-    this.windowdata = new Float32Array(this.fftsize); //begins as zeroes
-    this.hanning = new Float32Array(this.fftsize);
+    //self.fft.setupFFT(fftsize);
     
-    var ang=(2.0*Math.PI)/this.fftsize;
+    self.windowdata = new Float32Array(self.fftsize); //begins as zeroes
+    self.hanning = new Float32Array(self.fftsize);
+    
+    var ang=(2.0*Math.PI)/self.fftsize;
     
     for(var i=0;i<fftsize;++i)
-        this.hanning[i]=0.5 - 0.5*Math.cos(ang*i);
+        self.hanning[i]=0.5 - 0.5*Math.cos(ang*i);
     
     //initialised containing zeroes
-    this.powers = new Float32Array(this.halffftsize);
+    self.powers = new Float32Array(self.halffftsize);
     //var freqs = result.subarray(result.length / 2);
-    this.reals = new Float32Array(this.fftsize);
+    self.reals = new Float32Array(self.fftsize);
     
-    this.complex = new Float32Array(this.fftsize+2);
+    self.complex = new Float32Array(self.fftsize+2);
     
-    //this.imags = new Float32Array(this.fftsize);
+    //self.imags = new Float32Array(self.fftsize);
     
     //4 =2*2 compensates for half magnitude if only take non-conjugate part, fftsize compensates for 1/N
-    this.fftnormmult = 4*this.fftsize; //*fftsize;// /4; //1.0/fftsize;  or 1/(fftsize.sqrt)
+    self.fftnormmult = 4*self.fftsize; //*fftsize;// /4; //1.0/fftsize;  or 1/(fftsize.sqrt)
     
-    this.next = function(input) {
+    self.next = function(input) {
         
         //update by audioblocksize samples
-        var ready = this.windowing.next(input);
+        var ready = self.windowing.next(input);
         
         if(ready) {
             
             //no window function (square window)
-            if(this.windowtype==0) {
-            for (i = 0; i< this.fftsize; ++i) {
-                this.reals[i] = this.windowing.store[i]; //*hanning[i];
-                //this.imags[i] = 0.0;
+            if(self.windowtype==0) {
+            for (i = 0; i< self.fftsize; ++i) {
+                self.reals[i] = self.windowing.store[i]; //*hanning[i];
+                //self.imags[i] = 0.0;
                 
             }
             } else {
-                for (i = 0; i< this.fftsize; ++i) {
-                    this.reals[i] = this.windowing.store[i]*this.hanning[i];
-                    //this.imags[i] = 0.0;
+                for (i = 0; i< self.fftsize; ++i) {
+                    self.reals[i] = self.windowing.store[i]*self.hanning[i];
+                    //self.imags[i] = 0.0;
                     
                 }
             }
   
             //fft library call
-            //this.fft.transform(this.reals, this.imags);
-            //var output = this.fft.forward(this.reals);
+            //self.fft.transform(self.reals, self.imags);
+            //var output = self.fft.forward(self.reals);
             
-            this.fft.forward(this.reals,this.complex);
+            self.fft.forward(self.reals,self.complex);
             
             //output format is interleaved k*2, k*2+1 real and imag parts
             //DC and 0 then bin 1 real and imag ... nyquist and 0
             
             //power spectrum not amps, for comparative testing
-            for (var k = 0; k < this.halffftsize; ++k) {
+            for (var k = 0; k < self.halffftsize; ++k) {
                 //Math.sqrt(
                 var twok = 2*k;
-                //this.powers[k] = ((output[twok] * output[twok]) + (output[twok+1] * output[twok+1]) ); // * fftnormmult;
+                //self.powers[k] = ((output[twok] * output[twok]) + (output[twok+1] * output[twok+1]) ); // * fftnormmult;
                 
-                this.powers[k] = ((this.complex[twok] * this.complex[twok]) + (this.complex[twok+1] * this.complex[twok+1]) );
+                self.powers[k] = ((self.complex[twok] * self.complex[twok]) + (self.complex[twok+1] * self.complex[twok+1]) );
                 
                 //will scale later in onset detector itself
                 
-                //this.powers[k] = ((this.reals[k] * this.reals[k]) + (this.imags[k] * this.imags[k]) ); // * fftnormmult;
+                //self.powers[k] = ((self.reals[k] * self.reals[k]) + (self.imags[k] * self.imags[k]) ); // * fftnormmult;
                 
                 //freqs[k - align] = (2 * k / N) * (sample_rate / 2);
             }
             
-            //console.log(this.postfftfunction,'undefined');
+            //console.log(self.postfftfunction,'undefined');
             
-            if(this.postfftfunction !== undefined)
-            this.postfftfunction(this.powers,this.complex); //could pass this.complex as second argument to get phase spectrum etc
+            if(self.postfftfunction !== undefined)
+            self.postfftfunction(self.powers,self.complex); //could pass self.complex as second argument to get phase spectrum etc
             
             
         }
@@ -583,73 +590,75 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
 
 function MMLLOverlapAdd(windowsize=1024,hopsize=512,windowtype=0) {
     
-    this.windowsize = windowsize;
+    var self = this;
+    
+    self.windowsize = windowsize;
     
     if(hopsize>windowsize) hopsize = windowsize;
     
-    this.hopsize = hopsize;
-    this.overlap = windowsize - hopsize;
+    self.hopsize = hopsize;
+    self.overlap = windowsize - hopsize;
     
-    this.store = new Array(windowsize);
+    self.store = new Array(windowsize);
     
-    //start zeroed, will be summing to this buffer
-    for (var ii=0; ii<this.windowsize; ++ii)
-        this.store[ii] = 0;
+    //start zeroed, will be summing to self buffer
+    for (var ii=0; ii<self.windowsize; ++ii)
+        self.store[ii] = 0;
         
-    //this.outputpointer = 0; //this.overlap;
+    //self.outputpointer = 0; //self.overlap;
 
     //input is windowsize long, output will be hopsize long
-    this.next = function(input,output) {
+    self.next = function(input,output) {
  
         //copy data backwards in store by hopsize
         
         var i;
         
-        for (i=0; i<this.overlap; ++i) {
+        for (i=0; i<self.overlap; ++i) {
             
-            this.store[i] = this.store[this.hopsize+i];
+            self.store[i] = self.store[self.hopsize+i];
         }
         
         //zero end part
         
-        for (i=0; i<this.hopsize; ++i) {
+        for (i=0; i<self.hopsize; ++i) {
             
-            this.store[this.hopsize+i] = 0.0;
+            self.store[self.hopsize+i] = 0.0;
         }
         
         //sum in new data, windowed appropriately
         
         if(windowtype==0) {
             
-            for (var i=0; i<this.windowsize; ++i)
-                this.store[i] += input[i];
+            for (var i=0; i<self.windowsize; ++i)
+                self.store[i] += input[i];
             
                 } else {
                     
                     //triangular windows for linear cross fade for now...
                     var prop;
-                    var mult = 1.0/this.hopsize;
+                    var mult = 1.0/self.hopsize;
                     var index;
                     
-                    for (var i=0; i<this.hopsize; ++i) {
+                    for (var i=0; i<self.hopsize; ++i) {
                         
                         prop = i*mult;
                         
-                        this.store[i] += input[i]*prop;
+                        self.store[i] += input[i]*prop;
                         
-                        index = this.windowsize-1-i;
+                        index = self.windowsize-1-i;
                         
-                        this.store[index] += input[index]*prop;
+                        self.store[index] += input[index]*prop;
                     }
                     
-                    for (var i=this.hopsize; i<this.overlap; ++i)
-                        this.store[i] += input[i];
+                    for (var i=self.hopsize; i<self.overlap; ++i)
+                        self.store[i] += input[i];
                     
                 }
         
        
-        for (var i=0; i<this.hopsize; ++i) {
-            output[i] = this.store[i];
+        for (var i=0; i<self.hopsize; ++i) {
+            output[i] = self.store[i];
             
         }
         
@@ -10560,27 +10569,33 @@ this.next = function(input,out,numSamples) {
 //shared between Sampler and MMLLWebAudioSetup
 function MMLLInputAudio(blocksize)
 {
-	this.monoinput = new Float32Array(blocksize);
-	this.inputL = new Float32Array(blocksize);
-	this.inputR = new Float32Array(blocksize);
-    this.numChannels = 1;
+    var self = this;
+    
+	self.monoinput = new Float32Array(blocksize);
+	self.inputL = new Float32Array(blocksize);
+	self.inputR = new Float32Array(blocksize);
+    self.numChannels = 1;
 }
 function MMLLOutputAudio(blocksize)
 {
-	this.outputL = new Float32Array(blocksize);
-	this.ouputR = new Float32Array(blocksize);
+    var self = this;
+    
+	self.outputL = new Float32Array(blocksize);
+	self.ouputR = new Float32Array(blocksize);
 }
 
 
 //no longer uses interleaved audio if multiple channels
 function MMLLBuffer() {
     
-    this.dataL = 0;
-    this.dataR = 0;
-    this.length = 0;
-    this.duration = 0;
-    this.sampleRate = 44100.0;
-    this.numChannels = 1; //unless otherwise
+    var self = this;
+    
+    self.dataL = 0;
+    self.dataR = 0;
+    self.length = 0;
+    self.duration = 0;
+    self.sampleRate = 44100.0;
+    self.numChannels = 1; //unless otherwise
 
     
 }
@@ -10589,30 +10604,32 @@ function MMLLBuffer() {
 //contains state for block by block playback of a mono OR stereo buffer object
 function MMLLSamplePlayer() {
     
-    this.buffer = 0;
-    this.playbackposition = 0;
-    this.lengthinsampleframes = 0;
-    this.numChannels  = 1;
-    this.playing = 0;
-    this.offset = 0;
+    var self = this;
+    
+    self.buffer = 0;
+    self.playbackposition = 0;
+    self.lengthinsampleframes = 0;
+    self.numChannels  = 1;
+    self.playing = 0;
+    self.offset = 0;
     
     //mix settings for pan and amplitude come later? //to a stereo output bus
-    //this.amp = 0.4;
-    //this.pan = 0.0;
+    //self.amp = 0.4;
+    //self.pan = 0.0;
  
     
-    this.reset = function(buffer) {
+    self.reset = function(buffer) {
         
         if(buffer!= null) {
-            this.buffer = buffer;
+            self.buffer = buffer;
             
-            this.lengthinsampleframes = buffer.length;
+            self.lengthinsampleframes = buffer.length;
             
-            this.numChannels = buffer.numChannels;
+            self.numChannels = buffer.numChannels;
         }
         
-        this.playbackposition = 0;
-        this.playing = 1;
+        self.playbackposition = 0;
+        self.playing = 1;
         
     }
     
@@ -10622,20 +10639,20 @@ function MMLLSamplePlayer() {
     //CHECK FOR STEREO COMPATIBILITY
     
     //arrayL, arrayR not stereo rendering
-    this.render = function(inputaudio, numSamples) {
+    self.render = function(inputaudio, numSamples) {
         
         var i;
         
-        var samplesleft = this.lengthinsampleframes - this.playbackposition; //this.buffer.length;
+        var samplesleft = self.lengthinsampleframes - self.playbackposition; //self.buffer.length;
         
-        var datasource,datasource2; // = this.buffer.data;
+        var datasource,datasource2; // = self.buffer.data;
         
-        var offset = this.offset;
+        var offset = self.offset;
         
         var baseindex, sourceinde
         
         //must make copy else changing original reference and messing up rendering for other active events?
-        //actually, probably OK, but will keep this way while debugging an issue right now
+        //actually, probably OK, but will keep self way while debugging an issue right now
         var numsamplesnow = numSamples;
         
         numsamplesnow -= offset;
@@ -10644,10 +10661,10 @@ function MMLLSamplePlayer() {
 
         if(numsamplesnow>samplesleft) {
             samplestodo = samplesleft;
-             this.playing = 0;
+             self.playing = 0;
         }
         
-        var pos = this.playbackposition;
+        var pos = self.playbackposition;
         
         var outputL = inputaudio.inputL;
         var outputR = inputaudio.inputR;
@@ -10657,9 +10674,9 @@ function MMLLSamplePlayer() {
         var temp;
         if(offset>0) {
             
-            if(this.numChannels ==1) {
+            if(self.numChannels ==1) {
             
-                datasource = this.buffer.dataL;
+                datasource = self.buffer.dataL;
                 
             for (i = 0; i < samplestodo; ++i) {
                 
@@ -10673,8 +10690,8 @@ function MMLLSamplePlayer() {
                 
             } else {
                 
-                datasource = this.buffer.dataL;
-                datasource2 = this.buffer.dataR;
+                datasource = self.buffer.dataL;
+                datasource2 = self.buffer.dataR;
                 
                 for (i = 0; i < samplestodo; ++i) {
                     temp = offset+i;
@@ -10698,14 +10715,14 @@ function MMLLSamplePlayer() {
             }
             
             //only active in first block rendered
-            this.offset = 0;
+            self.offset = 0;
             
         } else
         {
             
-            if(this.numChannels ==1) {
+            if(self.numChannels ==1) {
                 
-                datasource = this.buffer.dataL;
+                datasource = self.buffer.dataL;
                 
                
                 for (i = 0; i < samplestodo; ++i) {
@@ -10727,8 +10744,8 @@ function MMLLSamplePlayer() {
                 
             } else {
                 
-                datasource = this.buffer.dataL;
-                datasource2 = this.buffer.dataR;
+                datasource = self.buffer.dataL;
+                datasource2 = self.buffer.dataR;
                 
                 for (i = 0; i < samplestodo; ++i) {
                     outputL[i] += datasource[pos+i];
@@ -10752,7 +10769,7 @@ function MMLLSamplePlayer() {
             
         }
         
-        this.playbackposition += samplestodo;
+        self.playbackposition += samplestodo;
         
        
         
@@ -10766,15 +10783,17 @@ function MMLLSamplePlayer() {
 
 function MMLLSampler() {
     
+    //https://stackoverflow.com/questions/20279484/how-to-access-the-correct-this-inside-a-callback
+    var self = this;
     
-    this.loadcounter = 0;
-    this.buffers = 0;
+    self.loadcounter = 0;
+    self.buffers = 0;
     
-    this.loadSamples = function(arrayofpaths, onloadfunction) {
+    self.loadSamples = function(arrayofpaths, onloadfunction, audiocontext) {
         
-        this.numbuffers = arrayofpaths.length;
+        self.numbuffers = arrayofpaths.length;
         
-        this.buffers = new Array(this.numbuffers);
+        self.buffers = new Array(self.numbuffers);
         
         for(var i=0; i<arrayofpaths.length; ++i) {
             
@@ -10784,11 +10803,11 @@ function MMLLSampler() {
             
             if(typeof(nowtoload)==='string') {
             
-            this.loadSample(nowtoload,onloadfunction,i);
+            self.loadSample(nowtoload,onloadfunction,i,audiocontext);
                 
             } else {
                 
-            this.loadSample2(nowtoload,onloadfunction,i);
+            self.loadSample2(nowtoload,onloadfunction,i,audiocontext);
                 
             }
             
@@ -10800,10 +10819,8 @@ function MMLLSampler() {
     
  
     
-    this.loadSample2 = function(fileobject,onloadfunction,index) {
-        
-        //https://stackoverflow.com/questions/20279484/how-to-access-the-correct-this-inside-a-callback
-        var self = this;
+    self.loadSample2 = function(fileobject,onloadfunction,index,audiocontext) {
+     
         
         //http://composerprogrammer.com/music/demo1.mp3
         
@@ -10865,7 +10882,7 @@ function MMLLSampler() {
                                          }
                                          
                                        
-                                         //console.log('buffer loaded test 1',self,this,self.loadcounter,filename,buf.length,buf.duration, buf.sampleRate); //print
+                                         //console.log('buffer loaded test 1',self,self,self.loadcounter,filename,buf.length,buf.duration, buf.sampleRate); //print
                                          
                                          
                                          //console.log('buffer loaded test 2',self.loadcounter,filename,buffernow.length,buffernow.sampleRate,self.buffers); //print
@@ -10894,14 +10911,12 @@ function MMLLSampler() {
     }
     
     
-    this.loadSample = function(filename,onloadfunction,index) {
+    self.loadSample = function(filename,onloadfunction,index,audiocontext) {
         
         var request = new XMLHttpRequest();
  
         //var filename = "loop"+which+".wav";
         
-        //https://stackoverflow.com/questions/20279484/how-to-access-the-correct-this-inside-a-callback
-        var self = this;
         
         //http://composerprogrammer.com/music/demo1.mp3
         request.open('GET', filename, true); //viper.ogg
@@ -10968,7 +10983,7 @@ function MMLLSampler() {
 //                                         buffernow.duration = buf.duration;
 //                                         buffernow.sampleRate = buf.sampleRate;
 //                                         
-//                                          //console.log('buffer loaded test 1',self,this,self.loadcounter,filename,buf.length,buf.duration, buf.sampleRate); //print
+//                                          //console.log('buffer loaded test 1',self,self,self.loadcounter,filename,buf.length,buf.duration, buf.sampleRate); //print
                                          
                                          
                                          //console.log('buffer loaded test 2',self.loadcounter,filename,buffernow.length,buffernow.sampleRate,self.buffers); //print
@@ -11056,7 +11071,7 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
         
         console.log("AudioContext established with sample rate:",self.sampleRate," and now setting up for input type:",self.inputtype); //print
         
-        self.setup(sampleRate);
+        self.setup(self.sampleRate);
         
         if((self.inputtype == 1) || (self.inputtype == 2)) {
             
@@ -11068,9 +11083,9 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
             
             self.node = self.audiocontext.createScriptProcessor(self.audioblocksize,self.numInputChannels,2); //1 or 2 inputs, 2 outputs
             
-            audioinput.connect(node);
+            audioinput.connect(self.node);
             
-            self.node.onaudioprocess = self.process;  //self is nil since self isn't what you think it is here
+            self.node.onaudioprocess = self.process;  //this is nil since this isn't what you think it is here
             
             self.node.connect(self.audiocontext.destination);
             
@@ -11113,7 +11128,7 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
         //self.samplearray = new Float32Array(audioblocksize);
         
         //"/sounds/05_radiohead_killer_cars.wav"
-        sampler.loadSamples([filename],
+        self.sampler.loadSamples([filename],
                             function onload() {
                             
                             self.sampleplayer = new MMLLSamplePlayer();
@@ -11140,7 +11155,7 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
                             self.node.connect(self.audiocontext.destination);
                             
                             
-                            });
+                            },self.audiocontext);
         
     };
     
@@ -11368,6 +11383,50 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
 //    var canvas = document.getElementById('canvas');
 //    var context = canvas.getContext('2d');
 
+    self.createStopButton = function() {
+        
+        self.stopbutton = document.createElement("BUTTON");        // Create a <button> element
+        var t = document.createTextNode("Stop Audio");       // Create a text node
+        self.stopbutton.appendChild(t);                                // Append the text to
+        
+        self.stopbutton.onclick = function() {
+            
+            if(self.audionotrunning==false) {
+                
+                //stop audio
+                
+                self.webaudio.audiocontext.close();
+                
+                self.audionotrunning = true;
+                
+                self.stopbutton.parentNode.removeChild(self.stopbutton);
+                
+                self.initGUI();
+                
+//                self.webaudio.context.close().then(function() {
+//                            
+//                                                   //reset GUI for new audio
+//                                           self.stopbutton.parentNode.removeChild(self.stopbutton);
+//                                                   
+//                                            self.initGUI();
+//                                                   });
+//                await self.webaudio.context.close();
+//                
+            }
+            
+            
+   
+            
+        }
+        
+        document.body.appendChild(self.stopbutton);                    // Append <button> to <body>
+
+        
+    };
+    
+    
+    self.initGUI = function() {
+    
     if(microphone) {
         
     self.openmicbutton = document.createElement("BUTTON");        // Create a <button> element
@@ -11378,7 +11437,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
             
             if(self.audionotrunning) {
                 
-                self.webaudio = MMLLWebAudioSetup(self.audioblocksize,1,self.callback,self.setup);
+                self.webaudio = new MMLLWebAudioSetup(self.audioblocksize,1,self.callback,self.setup);
                 
                 self.audionotrunning = false;
             }
@@ -11388,6 +11447,8 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
             if(audiofileload)
                 self.openaudiofilebutton.parentNode.removeChild(self.openaudiofilebutton);
             document.body.removeChild(textnode);
+            
+            self.createStopButton();
             
             
         }
@@ -11413,7 +11474,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
                                     if(self.audionotrunning) {
                                     
                                     //pass in filename or 1 for audio input
-                                    self.webaudio = MMLLWebAudioSetup(self.audioblocksize,self.inputfile.files[0],self.callback,self.setup);
+                                    self.webaudio = new MMLLWebAudioSetup(self.audioblocksize,self.inputfile.files[0],self.callback,self.setup);
                                     
                                     //webaudio.initSoundFileRead(file_input.files[0]);
                                     
@@ -11437,6 +11498,8 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
         self.openmicbutton.parentNode.removeChild(self.openmicbutton);
         document.body.removeChild(textnode);
             
+            self.createStopButton();
+            
             
         };
         
@@ -11446,7 +11509,9 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
         
     }
     
+    };
     
+    self.initGUI();
     
 //    self.whateverfunction = function(inputarg) {
 //        

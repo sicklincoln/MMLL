@@ -7,12 +7,12 @@
  * https://www.nayuki.io/page/free-small-fft-in-multiple-languages
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
+ * self software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * - The above copyright notice and this permission notice shall be included in
+ * - The above copyright notice and self permission notice shall be included in
  *   all copies or substantial portions of the Software.
  * - The Software is provided "as is", without warranty of any kind, express or
  *   implied, including but not limited to the warranties of merchantability,
@@ -30,11 +30,13 @@
 
 function MMLLFFT() {
     
-    this.cosTable = 0;
-    this.sinTable = 0;
+    var self = this;
+    
+    self.cosTable = 0;
+    self.sinTable = 0;
 
     
-    this.setupFFT = function(n) {
+    self.setupFFT = function(n) {
         
         
             //pre calculate
@@ -44,12 +46,12 @@ function MMLLFFT() {
             //if ((n & (n - 1)) == 0)  // Is power of 2, e.g. no overlap of bit pattern since n as 2^k introduces new bit over 2^k-1
             //{
                 
-                this.cosTable = new Array(n / 2);
-                this.sinTable = new Array(n / 2);
+                self.cosTable = new Array(n / 2);
+                self.sinTable = new Array(n / 2);
                 
                 for (var i = 0; i < n / 2; i++) {
-                    this.cosTable[i] = Math.cos(2 * Math.PI * i / n);
-                    this.sinTable[i] = Math.sin(2 * Math.PI * i / n);
+                    self.cosTable[i] = Math.cos(2 * Math.PI * i / n);
+                    self.sinTable[i] = Math.sin(2 * Math.PI * i / n);
                 }
                 
 //            }
@@ -57,12 +59,12 @@ function MMLLFFT() {
 //            {
 //                
 //                // Trignometric tables
-//                this.cosTable = new Array(n);
-//                this.sinTable = new Array(n);
+//                self.cosTable = new Array(n);
+//                self.sinTable = new Array(n);
 //                for (var i = 0; i < n; i++) {
 //                    var j = i * i % (n * 2);  // This is more accurate than j = i * i
-//                    this.cosTable[i] = Math.cos(Math.PI * j / n);
-//                    this.sinTable[i] = Math.sin(Math.PI * j / n);
+//                    self.cosTable[i] = Math.cos(Math.PI * j / n);
+//                    self.sinTable[i] = Math.sin(Math.PI * j / n);
 //                }
 //                
 //            }
@@ -82,7 +84,7 @@ function MMLLFFT() {
  * The vector's length must be a power of 2. Uses the Cooley-Tukey decimation-in-time radix-2 algorithm.
  */
     //transformRadix2
-this.transform = function (real, imag) {
+self.transform = function (real, imag) {
 	// Length variables
 	var n = real.length;
 	if (n != imag.length)
@@ -119,8 +121,8 @@ this.transform = function (real, imag) {
 		for (var i = 0; i < n; i += size) {
 			for (var j = i, k = 0; j < i + halfsize; j++, k += tablestep) {
 				var l = j + halfsize;
-				var tpre =  real[l] * this.cosTable[k] + imag[l] * this.sinTable[k];
-				var tpim = -real[l] * this.sinTable[k] + imag[l] * this.cosTable[k];
+				var tpre =  real[l] * self.cosTable[k] + imag[l] * self.sinTable[k];
+				var tpim = -real[l] * self.sinTable[k] + imag[l] * self.cosTable[k];
 				real[l] = real[j] - tpre;
 				imag[l] = imag[j] - tpim;
 				real[j] += tpre;
@@ -145,7 +147,7 @@ this.transform = function (real, imag) {
      * Computes the discrete Fourier transform (DFT) of the given complex vector, storing the result back into the vector.
      * The vector can have any length. This is a wrapper function.
      */
-//    this.transform = function(real,imag) {
+//    self.transform = function(real,imag) {
 //        
 //        //console.log('check', cosTable.length,sinTable.length, real.length);
 //        
@@ -155,7 +157,7 @@ this.transform = function (real, imag) {
 //        if (n == 0)
 //            return;
 //        else if ((n & (n - 1)) == 0)  // Is power of 2
-//            this.transformRadix2(real, imag);
+//            self.transformRadix2(real, imag);
 //        else  // More complicated algorithm for arbitrary sizes
 //            transformBluestein(real, imag);
 //    }
@@ -195,7 +197,7 @@ this.transform = function (real, imag) {
 //	}
 //	inverseTransform(xreal, ximag);
 //	
-//	for (var i = 0; i < n; i++) {  // Scaling (because this FFT implementation omits it)
+//	for (var i = 0; i < n; i++) {  // Scaling (because self FFT implementation omits it)
 //		outreal[i] = xreal[i] / n;
 //		outimag[i] = ximag[i] / n;
 //	}

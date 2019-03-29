@@ -55,7 +55,7 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
         
         console.log("AudioContext established with sample rate:",self.sampleRate," and now setting up for input type:",self.inputtype); //print
         
-        self.setup(sampleRate);
+        self.setup(self.sampleRate);
         
         if((self.inputtype == 1) || (self.inputtype == 2)) {
             
@@ -67,9 +67,9 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
             
             self.node = self.audiocontext.createScriptProcessor(self.audioblocksize,self.numInputChannels,2); //1 or 2 inputs, 2 outputs
             
-            audioinput.connect(node);
+            audioinput.connect(self.node);
             
-            self.node.onaudioprocess = self.process;  //self is nil since self isn't what you think it is here
+            self.node.onaudioprocess = self.process;  //this is nil since this isn't what you think it is here
             
             self.node.connect(self.audiocontext.destination);
             
@@ -112,7 +112,7 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
         //self.samplearray = new Float32Array(audioblocksize);
         
         //"/sounds/05_radiohead_killer_cars.wav"
-        sampler.loadSamples([filename],
+        self.sampler.loadSamples([filename],
                             function onload() {
                             
                             self.sampleplayer = new MMLLSamplePlayer();
@@ -139,7 +139,7 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
                             self.node.connect(self.audiocontext.destination);
                             
                             
-                            });
+                            },self.audiocontext);
         
     };
     

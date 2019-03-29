@@ -3,22 +3,24 @@
 //MMLL = Musical Machine Listening Library MMLL.js
 function MMLLwindowing(windowsize=1024,hopsize=512) {
     
-    this.windowsize = windowsize;
+    var self = this;
+    
+    self.windowsize = windowsize;
     
     if(hopsize>windowsize) hopsize = windowsize;
     
-    this.hopsize = hopsize;
-    this.overlap = windowsize - hopsize;
+    self.hopsize = hopsize;
+    self.overlap = windowsize - hopsize;
     
-    this.store = new Array(windowsize);
+    self.store = new Array(windowsize);
     
     //only zero old data
-    for (var ii=0; ii<this.overlap; ++ii)
-        this.store[ii] = 0;
+    for (var ii=0; ii<self.overlap; ++ii)
+        self.store[ii] = 0;
         
-    this.storepointer = this.overlap;
+    self.storepointer = self.overlap;
 
-    this.next = function(input) {
+    self.next = function(input) {
         
         var n = input.length; //code assumes n divides hopsize
         
@@ -27,34 +29,34 @@ function MMLLwindowing(windowsize=1024,hopsize=512) {
         
         //if just output a window of data
         //copy and update storepointer position
-        if(this.storepointer>=this.windowsize) {
+        if(self.storepointer>=self.windowsize) {
             
-            for (var i=0; i<this.overlap; ++i)
-                this.store[i] = this.store[this.hopsize+i];
+            for (var i=0; i<self.overlap; ++i)
+                self.store[i] = self.store[self.hopsize+i];
                 
-                this.storepointer = this.overlap;
+                self.storepointer = self.overlap;
            
             
             
         }
         
-        if((this.storepointer+n)>=this.windowsize) {
-            n = this.windowsize - this.storepointer;
+        if((self.storepointer+n)>=self.windowsize) {
+            n = self.windowsize - self.storepointer;
             //just in case doesn't fit exactly, don't bother if really going to wrap around since unresolvable issue if  overwrite buffer or multiple wraps in one go anyway
             
             result = true;
             
         }
         for (var i=0; i<n; ++i) {
-            this.store[this.storepointer+i] = input[i];
+            self.store[self.storepointer+i] = input[i];
             
         }
         
         
-        this.storepointer = (this.storepointer + n); //%(this.windowsize);
+        self.storepointer = (self.storepointer + n); //%(self.windowsize);
      
         
-//        if(this.storepointer ==0) {
+//        if(self.storepointer ==0) {
 //         
 //            console.log("back to zero index");
 //        }

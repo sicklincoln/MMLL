@@ -18,6 +18,9 @@
 </canvas> Phase Spectrum<br>
 
 
+<input type="range" min="0" max="200" value="0" step="1" oninput="setGain(this.value)" />Set gain<br><br>
+
+
 <h1>MMLL testing FFT</h1>
 
 <p>Recent browsers supporting Web Audio API only.</p>
@@ -30,6 +33,8 @@
     "use strict";
     
     var i; //general reusable counter variable
+    
+    var gain = 0.0;
     
    var fftsize = 1024;
    var numfftbins = fftsize/2 + 1;
@@ -101,15 +106,13 @@ var callback = function CallBack(input,output,n) {
         }
         
     }
-    
-    
-    
+  
    
     //for each sample
     for (i = 0; i < n; ++i) {
         
-        output.outputL[i] = 0.;
-        output.outputR[i] = 0.;
+        output.outputL[i] = gain * input.inputL[i];
+        output.outputR[i] = gain * input.inputR[i];
         
     }
     
@@ -117,7 +120,13 @@ var callback = function CallBack(input,output,n) {
 
 var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
 
-
+function setGain(newValue) {
+    
+    var amp = newValue/200;
+    
+    gain = amp*amp; //square more perceptually valid than linear fade
+    
+}
 
 
 
