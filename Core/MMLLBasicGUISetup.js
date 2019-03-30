@@ -84,7 +84,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
             self.openmicbutton.parentNode.removeChild(self.openmicbutton);
             if(audiofileload)
                 self.openaudiofilebutton.parentNode.removeChild(self.openaudiofilebutton);
-            document.body.removeChild(textnode);
+            document.body.removeChild(self.textnode);
             
             self.createStopButton();
             
@@ -96,7 +96,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
     }
    
     self.textnode = document.createTextNode(' --- ');
-    document.body.appendChild(textnode);
+    document.body.appendChild(self.textnode);
     
     if(audiofileload) {
         
@@ -134,7 +134,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
         self.openaudiofilebutton.parentNode.removeChild(self.openaudiofilebutton);
             if(microphone)
         self.openmicbutton.parentNode.removeChild(self.openmicbutton);
-        document.body.removeChild(textnode);
+        document.body.removeChild(self.textnode);
             
             self.createStopButton();
             

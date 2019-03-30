@@ -1,10 +1,10 @@
 //William Sethares sensory dissonance algorithm adapted from my SuperCollider SensoryDissonance UGen code
 //Sensory Dissonance model, measuring roughness between pairs of prominent spectral peaks. Follows the algorithm in William A. Sethares (1998) Consonance-Based Spectral Mappings. CMJ 22(1): 56-72
 
-function MMLLSensoryDissonance(sampleRate,fftsize=2048,maxpeaks=100,peakthreshold=0.1,norm,clamp=1) {
+function MMLLSensoryDissonance(sampleRate,fftsize=2048,maxpeaks=100,peakthreshold=0.1,norm,clamp=5) {
     
     
-    this.setup = function(sampleRate,fftsize=2048,maxpeaks=100,peakthreshold=0.1,norm,clamp=1) {
+    this.setup = function(sampleRate,fftsize=2048,maxpeaks=100,peakthreshold=0.1,norm,clamp=5) {
         var i;
         
         this.m_srate = sampleRate;

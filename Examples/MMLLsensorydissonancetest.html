@@ -79,7 +79,7 @@ var callback = function CallBack(input,output,n) {
     
 };
 
-var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
 
 setInterval(function(){ draw(); },millisecondsperframe);
 

@@ -48,7 +48,7 @@ var callback = function CallBack(input,output,n) {
     
 };
 
-var gui = MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
 
 function setKeyDecay(newValue) {
     chorddetector.keydecay = newValue*0.1;

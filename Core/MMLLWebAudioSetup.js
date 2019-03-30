@@ -21,6 +21,11 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
     //self.audionotrunning = 1;
     self.audiorunning = false;
     
+    self.usingMicrophone = function() {
+        
+        return ((self.inputtype == 1) || (self.inputtype == 2));
+    }
+    
     
     self.initAudio = function(inputstream) {
         
