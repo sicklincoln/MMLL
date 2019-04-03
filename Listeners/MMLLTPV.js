@@ -21,7 +21,7 @@ function PartialTrack() {
 };
 
 
-//freq in this case is omega, angular frequency in radians per sample = 2*PI*f/SR
+//freq in self case is omega, angular frequency in radians per sample = 2*PI*f/SR
 function TPVPeak() {
 	//var mag, freq, phase;  //improve frequency estimate by interpolation over amplitude of nearby points, or by time-frequency reassignment
     
@@ -40,109 +40,111 @@ function TPVPeak() {
 
 function MMLLTrackingPhaseVocoder(sampleRate,windowsize=1024, hopsize=512, maxpeaks=80, currentpeaks=40, freqmult=1.0, tolerance=4, noisefloor= 0.04) {
     
+    var self = this;
+    
     var i, j, temp;
     
-    this.g_costableTPVsize = 1024;
-    this.g_costableTPV = new Array(this.g_costableTPVsize+1); //extra value for wraparound linear interpolation calculations
+    self.g_costableTPVsize = 1024;
+    self.g_costableTPV = new Array(self.g_costableTPVsize+1); //extra value for wraparound linear interpolation calculations
     
-    var g_costableTPVsizereciprocal = 1.0/ this.g_costableTPVsize;
+    var g_costableTPVsizereciprocal = 1.0/ self.g_costableTPVsize;
     
-    for (i=0; i<=this.g_costableTPVsize; ++i) {
+    for (i=0; i<=self.g_costableTPVsize; ++i) {
         
         //2pi * (i/tablesize)
 		temp = 6.2831853071796*(i * g_costableTPVsizereciprocal);
 		
-        this.g_costableTPV[i] = Math.cos(temp); //or sin
+        self.g_costableTPV[i] = Math.cos(temp); //or sin
         
 		//printf("cos check %d %f",i,g_costableTPV[i]);
         
 	}
 
     
-    //    this.previousfftdata = new Array(1024*this.numpreviousframes);
-    // for(i=0; i<(1024*this.numpreviousframes); ++i)
+    //    self.previousfftdata = new Array(1024*self.numpreviousframes);
+    // for(i=0; i<(1024*self.numpreviousframes); ++i)
   
    
-this.setup = function(sampleRate) {
+self.setup = function(sampleRate) {
 	var i;
     
-    this.m_windowsize = windowsize; //defaults for now, may have to set as options later
-	this.m_hopsize = hopsize;
-    this.currentpeaks = currentpeaks;
-    this.freqmult = freqmult;
-    this.tolerance = tolerance;
-    this.noisefloor = noisefloor;
+    self.m_windowsize = windowsize; //defaults for now, may have to set as options later
+	self.m_hopsize = hopsize;
+    self.currentpeaks = currentpeaks;
+    self.freqmult = freqmult;
+    self.tolerance = tolerance;
+    self.noisefloor = noisefloor;
     
-    this.m_maxpeaks = maxpeaks;
-    
-    
-    this.stft = new MMLLSTFT(this.m_windowsize,this.m_hopsize,1); //Hanning window better for peak detection rather than rectangular
+    self.m_maxpeaks = maxpeaks;
     
     
-	//this.tcache=  (float*)RTAlloc(this.mWorld, this.m_hopsize * sizeof(float));
-	this.t2cache =  new Float32Array(this.m_hopsize );
-	this.t3cache = new Float32Array(this.m_hopsize );
-	this.tpropcache =  new Float32Array(this.m_hopsize );
+    self.stft = new MMLLSTFT(self.m_windowsize,self.m_hopsize,1); //Hanning window better for peak detection rather than rectangular
     
-	var rhop= 1.0/this.m_hopsize;
     
-	for (i=0; i<this.m_hopsize; ++i) {
-		this.t2cache[i] = i*i;
-		this.t3cache[i] = this.t2cache[i] * i;
-		this.tpropcache[i] = i*rhop;
+	//self.tcache=  (float*)RTAlloc(self.mWorld, self.m_hopsize * sizeof(float));
+	self.t2cache =  new Float32Array(self.m_hopsize );
+	self.t3cache = new Float32Array(self.m_hopsize );
+	self.tpropcache =  new Float32Array(self.m_hopsize );
+    
+	var rhop= 1.0/self.m_hopsize;
+    
+	for (i=0; i<self.m_hopsize; ++i) {
+		self.t2cache[i] = i*i;
+		self.t3cache[i] = self.t2cache[i] * i;
+		self.tpropcache[i] = i*rhop;
 	}
 
-	this.m_nover2 = this.m_windowsize/2;
+	self.m_nover2 = self.m_windowsize/2;
 
 	
-    this.maxnumtracks = 2*this.m_maxpeaks;
+    self.maxnumtracks = 2*self.m_maxpeaks;
     
-	this.m_tracks= new Array(this.maxnumtracks);
+	self.m_tracks= new Array(self.maxnumtracks);
     
-	for (i=0; i<this.maxnumtracks; ++i) {
+	for (i=0; i<self.maxnumtracks; ++i) {
         
-        this.m_tracks[i] = new PartialTrack();
+        self.m_tracks[i] = new PartialTrack();
         
-//        this.m_tracks[i].theta1 = 0.0;
-//        this.m_tracks[i].theta2 = 0.0;
-//        this.m_tracks[i].omega1 = 0.0;
-//        this.m_tracks[i].omega2 = 0.0;
-//        this.m_tracks[i].alpha = 0.0;
-//        this.m_tracks[i].beta = 0.0;
-//        this.m_tracks[i].amp1 = 0.0;
-//        this.m_tracks[i].amp2 = 0.0;
+//        self.m_tracks[i].theta1 = 0.0;
+//        self.m_tracks[i].theta2 = 0.0;
+//        self.m_tracks[i].omega1 = 0.0;
+//        self.m_tracks[i].omega2 = 0.0;
+//        self.m_tracks[i].alpha = 0.0;
+//        self.m_tracks[i].beta = 0.0;
+//        self.m_tracks[i].amp1 = 0.0;
+//        self.m_tracks[i].amp2 = 0.0;
         
         
         
     }
   
-    this.m_prevpeaks = new Array(this.m_maxpeaks);
+    self.m_prevpeaks = new Array(self.m_maxpeaks);
     
-    this.m_newpeaks = new Array(this.m_maxpeaks);
+    self.m_newpeaks = new Array(self.m_maxpeaks);
     
-    for (i=0; i<this.m_maxpeaks; ++i) {
+    for (i=0; i<self.m_maxpeaks; ++i) {
         
-        this.m_prevpeaks[i] = new TPVPeak();
-        this.m_newpeaks[i] = new TPVPeak();
+        self.m_prevpeaks[i] = new TPVPeak();
+        self.m_newpeaks[i] = new TPVPeak();
         
         //mag, freq, phase;
-//        this.m_prevpeaks[i].mag = 0.0;
-//        this.m_prevpeaks[i].freq = 0.0;
-//        this.m_prevpeaks[i].phase = 0.0;
-//        this.m_newpeaks[i].mag = 0.0;
-//        this.m_newpeaks[i].freq = 0.0;
-//        this.m_newpeaks[i].phase = 0.0;
+//        self.m_prevpeaks[i].mag = 0.0;
+//        self.m_prevpeaks[i].freq = 0.0;
+//        self.m_prevpeaks[i].phase = 0.0;
+//        self.m_newpeaks[i].mag = 0.0;
+//        self.m_newpeaks[i].freq = 0.0;
+//        self.m_newpeaks[i].phase = 0.0;
         
     }
   
-	this.m_numprevpeaks = 0;
-	this.m_numnewpeaks = 0;
-	this.m_numtracks= 0;
-	this.m_resynthesisposition = 0;
+	self.m_numprevpeaks = 0;
+	self.m_numnewpeaks = 0;
+	self.m_numtracks= 0;
+	self.m_resynthesisposition = 0;
 
 }
 
-    this.setup(sampleRate);
+    self.setup(sampleRate);
 
     
     
@@ -152,11 +154,11 @@ this.setup = function(sampleRate) {
     
     
     
-this.newframe = function(complex,powers) {
+self.newframe = function(complex,powers) {
 
         //only calculate phases for peaks, use power spectrum for peak detection rather than magnitude spectrum, then only take sqrt as needed
     
-        //assumed in this representation
+        //assumed in self representation
         //dc, nyquist then complex pairs
     
         //swap new peaks to old; current now safe to overwrite;
@@ -164,17 +166,17 @@ this.newframe = function(complex,powers) {
         //just copy data over
     
     
-    for (i=0; i<this.m_maxpeaks; ++i) {
+    for (i=0; i<self.m_maxpeaks; ++i) {
 
-        this.m_prevpeaks[i].mag = this.m_newpeaks[i].mag;
-        this.m_prevpeaks[i].freq = this.m_newpeaks[i].freq;
-        this.m_prevpeaks[i].phase = this.m_newpeaks[i].phase;
+        self.m_prevpeaks[i].mag = self.m_newpeaks[i].mag;
+        self.m_prevpeaks[i].freq = self.m_newpeaks[i].freq;
+        self.m_prevpeaks[i].phase = self.m_newpeaks[i].phase;
     
     }
     
         //ditch old
-        this.m_numprevpeaks = this.m_numnewpeaks;
-        this.m_numnewpeaks = 0;
+        self.m_numprevpeaks = self.m_numnewpeaks;
+        self.m_numnewpeaks = 0;
     
         
         var phase, prevmag, mag, nextmag;
@@ -182,15 +184,15 @@ this.newframe = function(complex,powers) {
         //bin 1 can't be pick since no interpolation possible! dc should be ignored
         //test each if peak candidate; if so, add to list and add to peaks total
         
-        //prevmag = p->bin[0].mag; //this is at analysis frequency, not dc
+        //prevmag = p->bin[0].mag; //self is at analysis frequency, not dc
         //mag = p->bin[1].mag;
     
         prevmag = powers[1];
         mag = powers[2];
     
     
-        var numpeaksrequested = this.currentpeaks; //(int)ZIN0(4); //(int)(ZIN0(4)+0.0001);
-        var maxpeaks = this.m_maxpeaks;
+        var numpeaksrequested = self.currentpeaks; //(int)ZIN0(4); //(int)(ZIN0(4)+0.0001);
+        var maxpeaks = self.m_maxpeaks;
     
         if(maxpeaks>numpeaksrequested) maxpeaks = numpeaksrequested
     
@@ -200,12 +202,12 @@ this.newframe = function(complex,powers) {
     
         //angular frequency is pi*(i/nover2)
         
-        var angmult= 3.1415926535898/this.m_nover2;
-        var ampmult= (1.0/this.m_windowsize); //*(1.0/this.m_maxpeaks);
+        var angmult= 3.1415926535898/self.m_nover2;
+        var ampmult= (1.0/self.m_windowsize); //*(1.0/self.m_maxpeaks);
         
 		//defined here since needed in backdating phase for track births (and potentially for track deaths too)
         //T = number of samples per interpolaion frame, so equals hopsize
-        var T = this.m_hopsize;
+        var T = self.m_hopsize;
         
         //float invT= 1.0/T;
         
@@ -213,31 +215,31 @@ this.newframe = function(complex,powers) {
         //float freqmult= ZIN0(5); //(int)(ZIN0(4)+0.0001);
     
     //really powercheck
-    var ampcheck = this.noisefloor; // * noisefloor; // power check ZIN0(7); //0.001
+    var ampcheck = self.noisefloor; // * noisefloor; // power check ZIN0(7); //0.001
     
     var real,imag;
     
         //could restrict not to go above nover4!
-        for (i=3; i<(this.m_nover2-1); ++i) {
+        for (i=3; i<(self.m_nover2-1); ++i) {
             
             //phase= p->bin[i].phase;
             nextmag = powers[i]; //p->bin[i].mag;
             
-            if ((prevmag<mag) && (nextmag<mag) && (mag>ampcheck) && (this.m_numnewpeaks<maxpeaks)) {
+            if ((prevmag<mag) && (nextmag<mag) && (mag>ampcheck) && (self.m_numnewpeaks<maxpeaks)) {
                 //found a peak
                 
                 //could use cubic interpolation// successive parabolic interpolation to refine peak location; or should have zero padded
-                this.m_newpeaks[this.m_numnewpeaks].mag = Math.sqrt(mag) * ampmult; //must divide by fftsize before resynthesis!
-                this.m_newpeaks[this.m_numnewpeaks].freq =(i-1)*angmult*this.freqmult; //if should be angular frequency per sample, divide by T
+                self.m_newpeaks[self.m_numnewpeaks].mag = Math.sqrt(mag) * ampmult; //must divide by fftsize before resynthesis!
+                self.m_newpeaks[self.m_numnewpeaks].freq =(i-1)*angmult*self.freqmult; //if should be angular frequency per sample, divide by T
                 
                 real = complex[2*i-2];
                 imag = complex[2*i-1];
                 
-                this.m_newpeaks[this.m_numnewpeaks].phase = Math.atan(imag, real); //p->bin[i-1].phase;	//is this in range -pi to pi? more like -1 to 5 or so, but hey, is in radians
+                self.m_newpeaks[self.m_numnewpeaks].phase = Math.atan(imag, real); //p->bin[i-1].phase;	//is self in range -pi to pi? more like -1 to 5 or so, but hey, is in radians
                 
                 //printf("newpeak %d amp %f freq %f phase %f \n",numnewpeaks, mag * ampmult,(i-1)*angmult, p->bin[i-1].phase);
                 
-                ++this.m_numnewpeaks;
+                ++self.m_numnewpeaks;
                 
             }
             
@@ -251,11 +253,11 @@ this.newframe = function(complex,powers) {
         var rightsort = 0;
         var flag = true;
     
-        var tracks = this.m_tracks;
-        var numtracks = 0; //this.m_numtracks;
+        var tracks = self.m_tracks;
+        var numtracks = 0; //self.m_numtracks;
         
         //increase tolerance
-        var tolerance = this.tolerance; //ZIN0(6)*angmult;
+        var tolerance = self.tolerance; //ZIN0(6)*angmult;
     
         var testfreq;
     
@@ -266,25 +268,25 @@ this.newframe = function(complex,powers) {
         //if right within tolerance, find closest; if less than, match, else must check next on left whether better match. If not, match, else, check previous on right. If within tolerance, match, else death on right.
         
         //step through prevpeaks
-        for (i=0; i<this.m_numprevpeaks; ++i) {
+        for (i=0; i<self.m_numprevpeaks; ++i) {
             
-            var freqnow = this.m_prevpeaks[i].freq;
+            var freqnow = self.m_prevpeaks[i].freq;
             
             flag = true;
             
             while(flag) {
                 
-                if(rightsort>=this.m_numnewpeaks) {flag=false;} else {
-                    testfreq= this.m_newpeaks[rightsort].freq;
+                if(rightsort>=self.m_numnewpeaks) {flag=false;} else {
+                    testfreq= self.m_newpeaks[rightsort].freq;
                     
                     if((testfreq+tolerance)<freqnow) {
                         //birth on right
-                        tracks[numtracks].omega1 = this.m_newpeaks[rightsort].freq;
-                        tracks[numtracks].theta2 = this.m_newpeaks[rightsort].phase;
-                        tracks[numtracks].omega2 = this.m_newpeaks[rightsort].freq; //match to itself
-                        tracks[numtracks].theta1 = this.m_newpeaks[rightsort].phase - (T*(this.m_newpeaks[rightsort].freq)); //should really be current phase + freq*hopsize
+                        tracks[numtracks].omega1 = self.m_newpeaks[rightsort].freq;
+                        tracks[numtracks].theta2 = self.m_newpeaks[rightsort].phase;
+                        tracks[numtracks].omega2 = self.m_newpeaks[rightsort].freq; //match to itself
+                        tracks[numtracks].theta1 = self.m_newpeaks[rightsort].phase - (T*(self.m_newpeaks[rightsort].freq)); //should really be current phase + freq*hopsize
                         tracks[numtracks].amp1 = 0.0;
-                        tracks[numtracks].amp2 = this.m_newpeaks[rightsort].mag;
+                        tracks[numtracks].amp2 = self.m_newpeaks[rightsort].mag;
                         ++numtracks;
                         ++rightsort;
                         
@@ -299,7 +301,7 @@ this.newframe = function(complex,powers) {
             }
             
             flag=false; //whether match process fails
-            if(rightsort>=this.m_numnewpeaks) {flag=true;} else {
+            if(rightsort>=self.m_numnewpeaks) {flag=true;} else {
 				//printf("testfreq %f freqnow %f tolerance %f \n ", testfreq, freqnow, tolerance);
                 
                 //assumption that testfreq already valid;
@@ -311,8 +313,8 @@ this.newframe = function(complex,powers) {
                     var bestsofar = Math.abs(freqnow - testfreq);
                     var bestindex = rightsort;
                     
-                    for (j=(rightsort+1); j<this.m_numnewpeaks; ++j) {
-                        var newcandidate = this.m_newpeaks[j].freq;
+                    for (j=(rightsort+1); j<self.m_numnewpeaks; ++j) {
+                        var newcandidate = self.m_newpeaks[j].freq;
                         var newproximity = Math.abs(newcandidate-freqnow);
                         
                         //must keep getting closer, else no use
@@ -321,15 +323,15 @@ this.newframe = function(complex,powers) {
                     }
                     
                     //now have closest estimate. If less than freqnow have match
-                    var closest = this.m_newpeaks[bestindex].freq;
+                    var closest = self.m_newpeaks[bestindex].freq;
                     var havematch = false;
                     
                     //printf("closest! %f bestindex %d rightsort %d \n ", closest, bestindex, rightsort);
                     
-                    if(closest<freqnow || (i==(this.m_numprevpeaks-1))) havematch=true;
-                    else { //test next i as available in this case
+                    if(closest<freqnow || (i==(self.m_numprevpeaks-1))) havematch=true;
+                    else { //test next i as available in self case
                         
-                        var competitor = this.m_prevpeaks[i+1].freq;
+                        var competitor = self.m_prevpeaks[i+1].freq;
                         
                         if (Math.abs(competitor-closest)<bestsofar) {
                             
@@ -354,17 +356,17 @@ this.newframe = function(complex,powers) {
                         for (j=rightsort; j<=(bestindex-1);++j) {
                             //BIRTHS ON RIGHT
                             
-                            tracks[numtracks].omega1=this.m_newpeaks[j].freq;
-                            tracks[numtracks].theta2=this.m_newpeaks[j].phase;
-                            tracks[numtracks].omega2=this.m_newpeaks[j].freq; //match to itself
+                            tracks[numtracks].omega1=self.m_newpeaks[j].freq;
+                            tracks[numtracks].theta2=self.m_newpeaks[j].phase;
+                            tracks[numtracks].omega2=self.m_newpeaks[j].freq; //match to itself
                             
-                            temp = this.m_newpeaks[j].phase - (T*(this.m_newpeaks[j].freq));
+                            temp = self.m_newpeaks[j].phase - (T*(self.m_newpeaks[j].freq));
                                     
                             temp = (temp % 6.2831853071796 + 6.2831853071796)%6.2831853071796;
                             
-                            tracks[numtracks].theta1 = temp; //sc_wrap(newpeaks[j].phase - (T*(this.newpeaks[j].freq)),0.0f,(float)twopi); //backcalculate starting phase
+                            tracks[numtracks].theta1 = temp; //sc_wrap(newpeaks[j].phase - (T*(self.newpeaks[j].freq)),0.0f,(float)twopi); //backcalculate starting phase
                             tracks[numtracks].amp1 = 0.0;
-                            tracks[numtracks].amp2 = this.m_newpeaks[j].mag;
+                            tracks[numtracks].amp2 = self.m_newpeaks[j].mag;
                             ++numtracks;
                             ++rightsort;
                         }
@@ -372,12 +374,12 @@ this.newframe = function(complex,powers) {
                         //printf("match! \n ");
                         
                         //MATCH!
-                        tracks[numtracks].theta1 = this.m_prevpeaks[i].phase;
-                        tracks[numtracks].omega1 = this.m_prevpeaks[i].freq;
-                        tracks[numtracks].theta2 = this.m_newpeaks[rightsort].phase; //match to itself; should really be current phase + freq*hopsize
-                        tracks[numtracks].omega2 = this.m_newpeaks[rightsort].freq; //match to itself
-                        tracks[numtracks].amp1 = this.m_prevpeaks[i].mag;
-                        tracks[numtracks].amp2 = this.m_newpeaks[rightsort].mag;
+                        tracks[numtracks].theta1 = self.m_prevpeaks[i].phase;
+                        tracks[numtracks].omega1 = self.m_prevpeaks[i].freq;
+                        tracks[numtracks].theta2 = self.m_newpeaks[rightsort].phase; //match to itself; should really be current phase + freq*hopsize
+                        tracks[numtracks].omega2 = self.m_newpeaks[rightsort].freq; //match to itself
+                        tracks[numtracks].amp1 = self.m_prevpeaks[i].mag;
+                        tracks[numtracks].amp2 = self.m_newpeaks[rightsort].mag;
                         
                         //yes, OK
                         //printf("amp check i %d amp1 %f amp2 %f source1 %f source2 %f\n",i,tracks[numtracks].amp1, tracks[numtracks].amp2, prevpeaks[i].mag, newpeaks[rightsort].mag);
@@ -401,16 +403,16 @@ this.newframe = function(complex,powers) {
                 //DEATH ON LEFT
                 
                 //death on left
-                tracks[numtracks].theta1 = this.m_prevpeaks[i].phase;
-                tracks[numtracks].omega1 = this.m_prevpeaks[i].freq;
+                tracks[numtracks].theta1 = self.m_prevpeaks[i].phase;
+                tracks[numtracks].omega1 = self.m_prevpeaks[i].freq;
                 
-                temp = this.m_prevpeaks[i].phase + (T*this.m_prevpeaks[i].freq)
+                temp = self.m_prevpeaks[i].phase + (T*self.m_prevpeaks[i].freq)
                         
                 temp = (temp % 6.2831853071796 + 6.2831853071796)%6.2831853071796;
                         
                 tracks[numtracks].theta2 = temp; //sc_wrap(prevpeaks[i].phase + (T*prevpeaks[i].freq),0.0f,(float)twopi); //match to itself; should really be current phase + freq*hopsize
-                tracks[numtracks].omega2 = this.m_prevpeaks[i].freq; //match to itself
-                tracks[numtracks].amp1 = this.m_prevpeaks[i].mag;
+                tracks[numtracks].omega2 = self.m_prevpeaks[i].freq; //match to itself
+                tracks[numtracks].amp1 = self.m_prevpeaks[i].mag;
                 tracks[numtracks].amp2 = 0.0;
                 ++numtracks;
                 
@@ -423,7 +425,7 @@ this.newframe = function(complex,powers) {
         //rightsort should equal numnewpeaks!
         
         //now iterate through PartialTracks, preparing them for synthesis
-        this.m_numtracks = numtracks;
+        self.m_numtracks = numtracks;
         
         var theta1, omega1, theta2, omega2; //, amp1, amp2;  //, alpha, beta
         
@@ -433,7 +435,7 @@ this.newframe = function(complex,powers) {
         var temp1, temp2;
         
         //matrix elements common to all track calculations: eqn (34)
-        //for hyperefficiency could precalculate some of this material in constructor of course...
+        //for hyperefficiency could precalculate some of self material in constructor of course...
         var r1c1=3.0/(T*T);
         var r1c2= (-1.0)/T;
         var r2c1= (-2.0)/(T*T*T);
@@ -493,20 +495,20 @@ this.newframe = function(complex,powers) {
 //can dynamically reduce or increase the number of peaks stored (trails will automatically birth and die)
     
 //must pass in fft data (power spectrum)
-this.next = function(input,out,numSamples) {
+self.next = function(input,out,numSamples) {
 
     var i,j;
  
-    var ready = this.stft.next(input);
+    var ready = self.stft.next(input);
     
     if(ready) {
     
-        var fftbuf = this.stft.complex; //powers;
-        var powers = this.stft.powers;
+        var fftbuf = self.stft.complex; //powers;
+        var powers = self.stft.powers;
         
-        this.newframe(fftbuf,powers);
+        self.newframe(fftbuf,powers);
         
-		this.m_resynthesisposition=0;
+		self.m_resynthesisposition=0;
     
       
   }
@@ -529,9 +531,9 @@ this.next = function(input,out,numSamples) {
     
 	//printf("numtracks %d \n", numtracks);
     
-	for (i=0; i<this.m_numtracks; ++i) {
+	for (i=0; i<self.m_numtracks; ++i) {
    
-        tracknow = this.m_tracks[i];
+        tracknow = self.m_tracks[i];
         
 		amp1 = tracknow.amp1;
 		amp2 = tracknow.amp2;
@@ -542,22 +544,22 @@ this.next = function(input,out,numSamples) {
         
 		for (j=0; j<numSamples; ++j) {
             
-			index = this.m_resynthesisposition+j;
+			index = self.m_resynthesisposition+j;
             
 			t = index; ///T;
-			t2 = this.t2cache[index]; //t*t;
-			t3 = this.t3cache[index]; //t*t2;
-			tpos = this.tpropcache[index]; //((float)t/T);
+			t2 = self.t2cache[index]; //t*t;
+			t3 = self.t3cache[index]; //t*t2;
+			tpos = self.tpropcache[index]; //((float)t/T);
             
 			//linear interpolation of amplitude
             amp = amp1 + (tpos*(amp2- amp1));
 			//printf("amp %f temp3 %f amp2 %f number %f \n",amp,temp3, tracks[i].amp2, ((float)t/T));
             
-			//cubic interpolation of phase; probably this is the chief cause of inefficiency...
+			//cubic interpolation of phase; probably self is the chief cause of inefficiency...
 			phase = (theta1) + (t*omega1)+(t2*alpha) +(t3*beta);
             
             //0.1591549430919 = reciptwopi
-			phasetemp = phase*0.1591549430919*this.g_costableTPVsize;
+			phasetemp = phase*0.1591549430919*self.g_costableTPVsize;
             
 			//linear interpolation into costable
 			//could use fmod if add very big multiple of pi so modulo works properly; ie, no negative phases allowed BUT fmod is really inefficient!
@@ -569,7 +571,7 @@ this.next = function(input,out,numSamples) {
             
 			prev = Math.floor(wrapval);
 			prop =  wrapval-prev; //linear interpolation parameter
-			interp = ((1.0-prop)*(this.g_costableTPV[prev])) + (prop*(this.g_costableTPV[prev+1]));
+			interp = ((1.0-prop)*(self.g_costableTPV[prev])) + (prop*(self.g_costableTPV[prev+1]));
        
 			out[j] += amp*interp; //g_costableTPV[((int)(phasetemp))%g_costableTPVsize];
 		}
@@ -577,7 +579,7 @@ this.next = function(input,out,numSamples) {
 	}
     
     
-	this.m_resynthesisposition += numSamples;
+	self.m_resynthesisposition += numSamples;
 
 
 }

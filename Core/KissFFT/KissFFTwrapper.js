@@ -31,82 +31,86 @@ var kiss_fft_free = kissFFTModule.cwrap(
 
 var FFT = function (size) {
 
-    this.size = size;
-    this.fcfg = kiss_fft_alloc(size, false);
-    this.icfg = kiss_fft_alloc(size, true);
+    var self = this;
     
-    this.inptr = kissFFTModule._malloc(size*8 + size*8);
-    this.outptr = this.inptr + size*8;
+    self.size = size;
+    self.fcfg = kiss_fft_alloc(size, false);
+    self.icfg = kiss_fft_alloc(size, true);
     
-    this.cin = new Float32Array(kissFFTModule.HEAPU8.buffer, this.inptr, size*2);
-    this.cout = new Float32Array(kissFFTModule.HEAPU8.buffer, this.outptr, size*2);
+    self.inptr = kissFFTModule._malloc(size*8 + size*8);
+    self.outptr = self.inptr + size*8;
     
-    this.forward = function(cin) {
-	this.cin.set(cin);
-	kiss_fft(this.fcfg, this.inptr, this.outptr);
+    self.cin = new Float32Array(kissFFTModule.HEAPU8.buffer, self.inptr, size*2);
+    self.cout = new Float32Array(kissFFTModule.HEAPU8.buffer, self.outptr, size*2);
+    
+    self.forward = function(cin) {
+	self.cin.set(cin);
+	kiss_fft(self.fcfg, self.inptr, self.outptr);
 	return new Float32Array(kissFFTModule.HEAPU8.buffer,
-				this.outptr, this.size * 2);
+				self.outptr, self.size * 2);
     };
     
-    this.inverse = function(cin) {
-	this.cin.set(cpx);
-	kiss_fft(this.icfg, this.inptr, this.outptr);
+    self.inverse = function(cin) {
+	self.cin.set(cpx);
+	kiss_fft(self.icfg, self.inptr, self.outptr);
 	return new Float32Array(kissFFTModule.HEAPU8.buffer,
-				this.outptr, this.size * 2);
+				self.outptr, self.size * 2);
     };
     
-    this.dispose = function() {
-	kissFFTModule._free(this.inptr);
-	kiss_fft_free(this.fcfg);
-	kiss_fft_free(this.icfg);
+    self.dispose = function() {
+	kissFFTModule._free(self.inptr);
+	kiss_fft_free(self.fcfg);
+	kiss_fft_free(self.icfg);
     }
 };
 
 var FFTR = function (size) {
 
-    this.size = size;
-    this.fcfg = kiss_fftr_alloc(size, false);
-    this.icfg = kiss_fftr_alloc(size, true);
+    var self = this;
     
-    this.rptr = kissFFTModule._malloc(size*4 + (size+2)*4);
-    this.cptr = this.rptr + size*4;
+    self.size = size;
+    self.fcfg = kiss_fftr_alloc(size, false);
+    self.icfg = kiss_fftr_alloc(size, true);
     
-    this.ri = new Float32Array(kissFFTModule.HEAPU8.buffer, this.rptr, size);
-    this.ci = new Float32Array(kissFFTModule.HEAPU8.buffer, this.cptr, size+2);
+    self.rptr = kissFFTModule._malloc(size*4 + (size+2)*4);
+    self.cptr = self.rptr + size*4;
     
-//    this.outputptr = kissFFTModule._malloc((size+2)*4);
-//    this.output = new Float32Array(kissFFTModule.HEAPU8.buffer,
-//                               this.outputptr, this.size + 2);
+    self.ri = new Float32Array(kissFFTModule.HEAPU8.buffer, self.rptr, size);
+    self.ci = new Float32Array(kissFFTModule.HEAPU8.buffer, self.cptr, size+2);
+    
+//    self.outputptr = kissFFTModule._malloc((size+2)*4);
+//    self.output = new Float32Array(kissFFTModule.HEAPU8.buffer,
+//                               self.outputptr, self.size + 2);
 //    
-    this.forward = function(real,output) {
-	this.ri.set(real);
-	kiss_fftr(this.fcfg, this.rptr, this.cptr);
+    self.forward = function(real,output) {
+	self.ri.set(real);
+	kiss_fftr(self.fcfg, self.rptr, self.cptr);
         
         
-    //can replace with fixed buffer rather than new each time? Is there danger if returned from this function that memory never freed and eventually runs out?
-	//return new Float32Array(kissFFTModule.HEAPU8.buffer, this.cptr, this.size + 2);
+    //can replace with fixed buffer rather than new each time? Is there danger if returned from self function that memory never freed and eventually runs out?
+	//return new Float32Array(kissFFTModule.HEAPU8.buffer, self.cptr, self.size + 2);
         
-        output.set(this.ci);
+        output.set(self.ci);
       
-        //calling code musn't destroy this?
-        //return this.output;
+        //calling code musn't destroy self?
+        //return self.output;
         
     };
     
-    this.inverse = function(cpx,output) {
-	this.ci.set(cpx);
-	kiss_fftri(this.icfg, this.cptr, this.rptr);
+    self.inverse = function(cpx,output) {
+	self.ci.set(cpx);
+	kiss_fftri(self.icfg, self.cptr, self.rptr);
 	//return new Float32Array(kissFFTModule.HEAPU8.buffer,
-				//this.rptr, this.size);
+				//self.rptr, self.size);
       
-        output.set(this.ri);
+        output.set(self.ri);
         
     };
     
-    this.dispose = function() {
-	kissFFTModule._free(this.rptr);
-	kiss_fftr_free(this.fcfg);
-	kiss_fftr_free(this.icfg);
+    self.dispose = function() {
+	kissFFTModule._free(self.rptr);
+	kiss_fftr_free(self.fcfg);
+	kiss_fftr_free(self.icfg);
     }
 };
 

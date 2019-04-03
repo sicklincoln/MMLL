@@ -3,71 +3,72 @@
 
 function MMLLSensoryDissonance(sampleRate,fftsize=2048,maxpeaks=100,peakthreshold=0.1,norm,clamp=5) {
     
+    var self = this; 
     
-    this.setup = function(sampleRate,fftsize=2048,maxpeaks=100,peakthreshold=0.1,norm,clamp=5) {
+    self.setup = function(sampleRate,fftsize=2048,maxpeaks=100,peakthreshold=0.1,norm,clamp=5) {
         var i;
         
-        this.m_srate = sampleRate;
-        this.fftsize_ = fftsize;
+        self.m_srate = sampleRate;
+        self.fftsize_ = fftsize;
         
-        this.stft = new MMLLSTFT(this.fftsize_,this.fftsize_/2,0);
+        self.stft = new MMLLSTFT(self.fftsize_,self.fftsize_/2,0);
         
         //for(i=0; i<12; ++i)
         
-        this.maxnumpeaks_ = maxpeaks; //100;
-        this.peakthreshold_ = peakthreshold;
-        this.peakfreqs_ =  new Array(this.maxnumpeaks_);
-        this.peakamps_ = new Array(this.maxnumpeaks_);
+        self.maxnumpeaks_ = maxpeaks; //100;
+        self.peakthreshold_ = peakthreshold;
+        self.peakfreqs_ =  new Array(self.maxnumpeaks_);
+        self.peakamps_ = new Array(self.maxnumpeaks_);
         
-        this.norm_ = (typeof norm !== 'undefined') ?  norm : 0.01/maxpeaks;
+        self.norm_ = (typeof norm !== 'undefined') ?  norm : 0.01/maxpeaks;
         
-        this.clamp_ = clamp;
+        self.clamp_ = clamp;
         
-        this.topbin_= this.fftsize_*0.25;  //only go up to half the frequency range (i.e., there are half fftsize bins)
-        this.frequencyperbin_ = this.m_srate / this.fftsize_;
+        self.topbin_= self.fftsize_*0.25;  //only go up to half the frequency range (i.e., there are half fftsize bins)
+        self.frequencyperbin_ = self.m_srate / self.fftsize_;
         
-        this.dissonance_ = 0;
+        self.dissonance_ = 0;
         
     }
     
-    this.setup(sampleRate,fftsize,maxpeaks,peakthreshold,norm,clamp);
+    self.setup(sampleRate,fftsize,maxpeaks,peakthreshold,norm,clamp);
     
     //must pass in fft data (power spectrum)
-    this.next = function(input) {
+    self.next = function(input) {
         
         var i,j;
         
-        var ready = this.stft.next(input);
+        var ready = self.stft.next(input);
         
         if(ready) {
             
             
-            var fftbuf = this.stft.powers;
+            var fftbuf = self.stft.powers;
             
             
-            var peakfreqs= this.peakfreqs_;
-            var peakamps= this.peakamps_;
+            var peakfreqs= self.peakfreqs_;
+            var peakamps= self.peakamps_;
             
             var real, imag;
             
             var numpeaks = 0;
-            var maxnumpeaks = this.maxnumpeaks_;
+            var maxnumpeaks = self.maxnumpeaks_;
             
             var intensity;
             var position;
             
-            var threshold = this.peakthreshold_;
+            var threshold = self.peakthreshold_;
             
             //create powerspectrum
             
             var prev=0.0, now=0.0, next=0.0;
             
-            var frequencyperbin = this.frequencyperbin_;
+            var frequencyperbin = self.frequencyperbin_;
             
             //float totalpeakpower = 0.0f;
             var temp1, refinement;
             
-            for (j=1; j<=this.topbin_; ++j) {
+            for (j=1; j<=self.topbin_; ++j) {
                 
                 intensity = fftbuf[j];
                 
@@ -194,18 +195,18 @@ function MMLLSensoryDissonance(sampleRate,fftsize=2048,maxpeaks=100,peakthreshol
                 
             }
             
-            dissonancesum *= this.norm_;
+            dissonancesum *= self.norm_;
             
-            if(dissonancesum>this.clamp_) dissonancesum = this.clamp_;
+            if(dissonancesum>self.clamp_) dissonancesum = self.clamp_;
             
-            this.dissonance_ = dissonancesum;
-            //this.dissonance_ = sc_min(this.clamp_,dissonancesum*this.norm_); //numpeaks; //dissonancesum;  //divide by fftsize as compensation for amplitudes via FFT
+            self.dissonance_ = dissonancesum;
+            //self.dissonance_ = sc_min(self.clamp_,dissonancesum*self.norm_); //numpeaks; //dissonancesum;  //divide by fftsize as compensation for amplitudes via FFT
             
         }
         
         
-        //ZOUT0(i) = this.dissonance_;
-        return this.dissonance_;
+        //ZOUT0(i) = self.dissonance_;
+        return self.dissonance_;
         
         //return ready;
         
