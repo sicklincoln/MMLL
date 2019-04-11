@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+JavaScript Web Audio API MMLL test
+</title>
+</head>
+
+<body>
+
+<h1>MMLL testing Qitch Detector</h1>
+
+<p>Recent browsers supporting Web Audio API only.</p>
+
+<input type="range" min="0" max="100" value="0" step="1" oninput="setParam(this.value)" />Set gain<br><br>
+
+<script src="../MMLL.js"></script>
+
+<script type="text/javascript">
+    
+    "use strict";
+    
+    var gain = 0;
+    var i; //general reusable counter variable
+    
+    var audioblocksize = 256; //lowest latency possible
+    var sr;
+    
+    var phase = 0.0;
+    var phasechangepersample;
+    
+    var qitch;
+    var dissonance = 0;
+    var freq=440, midipitch=69;
+    
+    var setup = function SetUp(sampleRate) {
+        
+        sr = sampleRate;
+        
+        phasechangepersample = 100/sr;
+        
+        qitch = new MMLLQitch(sampleRate,4096); //accept defaults otherwise
+        
+        
+    };
+
+var callback = function CallBack(input,output,n) {
+    
+    freq = qitch.next(input.monoinput);
+    
+    midipitch = qitch.m_midipitch;
+    
+    //dissonance modifies pitch
+    phasechangepersample =  freq/sr; //  (dissonance*1000 + 100)/sr;
+    
+    console.log('freq',freq,'midipitch',midipitch);
+    
+    for (i = 0; i < n; ++i) {
+        
+        var outputval =  gain * (phase-0.5); //between +-0.5
+        
+        phase = (phase + phasechangepersample)%1.0;
+        
+        output.outputL[i] = outputval;
+        output.outputR[i] = outputval;
+        
+    }
+    
+};
+
+var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+
+function setParam(newValue) {
+    
+    gain = newValue*0.01;
+    
+}
+
+
+</script>
+
+</body>
+</html>
