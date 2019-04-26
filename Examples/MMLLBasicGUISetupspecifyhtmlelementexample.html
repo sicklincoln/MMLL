@@ -5,6 +5,8 @@
 
 <body>
 
+<p><span id="span" style="color:blue">An area for appending MMLL GUI elements: </span></p>
+
 <p>Extracts sensory dissonance feature (printed to the console).</p>
 
 <p>Select an input source from microphone input or audio file.</p>
@@ -13,6 +15,8 @@
 <script type="text/javascript">
     
 var audioblocksize = 256; //lowest latency possible
+
+var span = document.getElementById("span");
 
 var setup = function SetUp(sampleRate) {
         sensorydissonance = new MMLLSensoryDissonance(sampleRate); 
@@ -31,7 +35,7 @@ var callback = function CallBack(input,output,n) {
     
 };
 
-var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true,span);
 
 </script>
 </body>

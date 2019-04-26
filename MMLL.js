@@ -12075,7 +12075,7 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
 
 //put all the awkward Web Audio API setup code here
 
-function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,audiofileload=true) {
+function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,audiofileload=true,parent) {
  
     var self = this;
     self.audionotrunning = true;
@@ -12084,6 +12084,11 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
     self.callback = callback;
     self.setup = setup;
     self.textnode;
+    self.parent = parent;
+    
+    if (typeof self.parent === 'undefined') {
+        self.parent = document.body; //default then is to append to end of current document
+    }
     
 //    <button onclick="initMic()">Open Microphone</button><br>
 //    <button onclick="document.getElementById('file-input').click();">Open Audio File</button>
@@ -12132,7 +12137,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
             
         }
         
-        document.body.appendChild(self.stopbutton);                    // Append <button> to <body>
+        self.parent.appendChild(self.stopbutton);                    // Append <button> to <body>
 
         
     };
@@ -12159,19 +12164,19 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
             self.openmicbutton.parentNode.removeChild(self.openmicbutton);
             if(audiofileload)
                 self.openaudiofilebutton.parentNode.removeChild(self.openaudiofilebutton);
-            document.body.removeChild(self.textnode);
+            self.parent.removeChild(self.textnode);
             
             self.createStopButton();
             
             
         }
     
-    document.body.appendChild(self.openmicbutton);                    // Append <button> to <body>
+    self.parent.appendChild(self.openmicbutton);                    // Append <button> to <body>
     
     }
    
     self.textnode = document.createTextNode(' --- ');
-    document.body.appendChild(self.textnode);
+    self.parent.appendChild(self.textnode);
     
     if(audiofileload) {
         
@@ -12196,7 +12201,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
                                     
                                     }, false);
         
-        document.body.appendChild(self.inputfile);
+        self.parent.appendChild(self.inputfile);
         
         self.openaudiofilebutton = document.createElement("BUTTON");
         var t = document.createTextNode("Open Audio File");
@@ -12209,7 +12214,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
         self.openaudiofilebutton.parentNode.removeChild(self.openaudiofilebutton);
             if(microphone)
         self.openmicbutton.parentNode.removeChild(self.openmicbutton);
-        document.body.removeChild(self.textnode);
+        self.parent.removeChild(self.textnode);
             
             self.createStopButton();
             
@@ -12217,7 +12222,7 @@ function MMLLBasicGUISetup(callback,setup,audioblocksize=256,microphone=true,aud
         };
         
        
-        document.body.appendChild(self.openaudiofilebutton);
+        self.parent.appendChild(self.openaudiofilebutton);
         
         
     }
