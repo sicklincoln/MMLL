@@ -111,11 +111,11 @@ var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
 
 
 function setHoles(newValue) {
-    numholes = newValue;
+    numholes = parseFloat(newValue);
 }
 
 function lowPass(newValue) {
-    lpcutoff = newValue;
+    lpcutoff = parseFloat(newValue);
 }
 
 </script>

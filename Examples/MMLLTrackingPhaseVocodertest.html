@@ -56,7 +56,7 @@
         
         function setFreqMult(newValue) {
             
-            var freqmult = newValue/200;
+            var freqmult = parseFloat(newValue)/200;
             
             tpv.freqmult = freqmult;
             
@@ -65,7 +65,7 @@
         
         function setMaxTracks(newValue) {
             
-            var currentpeaks = newValue;
+            var currentpeaks = parseInt(newValue);
             
             tpv.currentpeaks = currentpeaks;
             

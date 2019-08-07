@@ -122,7 +122,7 @@ var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
 
 function setGain(newValue) {
     
-    var amp = newValue/200;
+    var amp = parseFloat(newValue)/200;
     
     gain = amp*amp; //square more perceptually valid than linear fade
     

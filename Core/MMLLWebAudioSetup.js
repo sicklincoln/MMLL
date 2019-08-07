@@ -112,7 +112,7 @@ function MMLLWebAudioSetup(blocksize, inputtype, callback, setup) {
     self.initSoundFileRead = function(filename) {
         
         self.sampler = new MMLLSampler();
-        self.sampleplayer;
+        //self.sampleplayer;
         //was Float64Array
         //self.samplearray = new Float32Array(audioblocksize);
         

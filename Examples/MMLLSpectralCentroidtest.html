@@ -9,15 +9,17 @@ JavaScript Web Audio API MMLL test
 
 <body>
 
-<h1>MMLL testing Sensory Dissonance </h1>
+<h1>MMLLSpectralCentroid test</h1>
 
 <p>Recent browsers supporting Web Audio API only.</p>
 
-<input type="range" min="0" max="100" value="1" step="1" oninput="setPeakThreshold(this.value)" /> Set peak power threshold<br><br>
-
 <canvas id="canvas" width="400" height="30">
     This text is displayed if your browser does not support HTML5 Canvas.
-</canvas> Sensory dissonance from 0 to 1<br>
+</canvas> Spectral centroid ("brightness") from 0 to 1<br>
+
+<input type="range" min="0" max="200" value="0" step="1" oninput="setGain(this.value)" />Set source gain<br><br>
+
+<input type="range" min="0" max="200" value="0" step="1" oninput="setToneGain(this.value)" />Set oscillator gain<br><br>
 
 <script src="../MMLL.js"></script>
 
@@ -33,7 +35,9 @@ JavaScript Web Audio API MMLL test
     var canvastop = canvas.offsetTop;
     var canvaswidth = canvas.width;
     var canvasheight = canvas.height;
-    
+
+    var gain = 0.0;
+    var tonegain = 0.0;
     
     var i; //general reusable counter variable
     
@@ -43,8 +47,8 @@ JavaScript Web Audio API MMLL test
     var phase = 0.0;
     var phasechangepersample;
     
-    var sensorydissonance;
-    var dissonance = 0;
+    var spectralcentroid;
+    var brightness = 0;
     
     var setup = function SetUp(sampleRate) {
         
@@ -52,28 +56,27 @@ JavaScript Web Audio API MMLL test
         
         phasechangepersample = 100/sr;
         
-        sensorydissonance = new MMLLSensoryDissonance(sampleRate); //accept defaults otherwise
-        
+        spectralcentroid = new MMLLSpectralCentroid(); //accept defaults
         
     };
 
 var callback = function CallBack(input,output,n) {
     
-    dissonance = sensorydissonance.next(input.monoinput);
+    brightness = spectralcentroid.next(input.monoinput) * 8; //typically only up to 0.125 or so
     
     //dissonance modifies pitch
-    phasechangepersample = (dissonance*1000 + 100)/sr;
+    phasechangepersample = (brightness*1000 + 100)/sr;
     
-    console.log('dissonance',dissonance);
+    console.log('brightness',brightness);
     
     for (i = 0; i < n; ++i) {
         
-        var outputval = phase-0.5; //between +-0.5
+        var outputval = tonegain * (phase-0.5); //between +-0.5
         
         phase = (phase + phasechangepersample)%1.0;
         
-        output.outputL[i] = outputval;
-        output.outputR[i] = outputval;
+        output.outputL[i] = outputval+(gain*(input.inputL[i]));
+        output.outputR[i] = outputval+(gain*(input.inputR[i]));
         
     }
     
@@ -83,11 +86,6 @@ var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
 
 setInterval(function(){ draw(); },millisecondsperframe);
 
-function setPeakThreshold(newValue) {
-    
-    sensorydissonance.peakthreshold_ = parseFloat(newValue)*0.1;
-    
-}
 
 function draw() {
     
@@ -110,13 +108,29 @@ function draw() {
     
     context.moveTo(0,0);
         
-    context.lineTo(dissonance*400,0);
+    context.lineTo(brightness*400,0);
 
     context.stroke();
     
     
 }
 
+
+function setGain(newValue) {
+    
+    var amp = parseFloat(newValue)/200;
+    
+    gain = amp*amp; //square more perceptually valid than linear fade
+    
+}
+
+function setToneGain(newValue) {
+    
+    var amp = parseFloat(newValue)/200;
+    
+    tonegain = amp*amp; //square more perceptually valid than linear fade
+    
+}
 
 </script>
 

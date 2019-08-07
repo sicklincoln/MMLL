@@ -51,11 +51,11 @@ var callback = function CallBack(input,output,n) {
 var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
 
 function setKeyDecay(newValue) {
-    chorddetector.keydecay = newValue*0.1;
+    chorddetector.keydecay = parseFloat(newValue)*0.1;
 }
 
 function setChromaLeak(newValue) {
-    chorddetector.chromaleak = newValue*0.01;
+    chorddetector.chromaleak = parseFloat(newValue)*0.01;
 }
 
 

@@ -70,7 +70,7 @@ var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
 
 function setParam(newValue) {
     
-    gain = newValue*0.01;
+    gain = parseFloat(newValue)*0.01;
     
 }
 

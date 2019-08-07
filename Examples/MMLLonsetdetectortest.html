@@ -69,7 +69,7 @@ var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
 
 function setThreshold(newValue) {
     
-    var threshold = newValue*0.01;
+    var threshold = parseFloat(newValue)*0.01;
     
     onsetdetector.threshold = threshold;
     

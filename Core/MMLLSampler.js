@@ -18,7 +18,7 @@ function MMLLOutputAudio(blocksize)
     var self = this;
     
 	self.outputL = new Float32Array(blocksize);
-	self.ouputR = new Float32Array(blocksize);
+	self.outputR = new Float32Array(blocksize);
 }
 
 
