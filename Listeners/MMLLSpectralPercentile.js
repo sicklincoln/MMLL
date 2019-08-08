@@ -1,11 +1,11 @@
 
-function MMLLSpectralPercentile(percentile=0.8,fftsize=2048,hopsize=1024) {
+function MMLLSpectralPercentile(sampleRate, percentile=0.8,fftsize=2048,hopsize=1024) {
     
     var self = this; 
     
     self.percentile = percentile;
     
-    self.setup = function(fftsize=2048,hopsize=1024) {
+    self.setup = function(sampleRate, fftsize=2048,hopsize=1024) {
         var i;
         
         //self.m_srate = sampleRate;
@@ -19,7 +19,7 @@ function MMLLSpectralPercentile(percentile=0.8,fftsize=2048,hopsize=1024) {
         
     }
     
-    self.setup(fftsize,hopsize);
+    self.setup(sampleRate, fftsize,hopsize);
     
     //must pass in fft data (power spectrum)
     self.next = function(input) {

@@ -58,9 +58,8 @@ JavaScript Web Audio API MMLL test
         
         phasechangepersample = 100/sr;
         
-        extractor = new MMLLSpectralPercentile(percentile);
-        
-        
+        extractor = new MMLLSpectralPercentile(sr,percentile);
+     
     };
 
 var callback = function CallBack(input,output,n) {

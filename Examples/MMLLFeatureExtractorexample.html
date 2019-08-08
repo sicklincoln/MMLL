@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>JavaScript Web Audio API MMLL test</title>
+</head>
+
+<body>
+
+<p>Extract audio features from audio files and return results</p>
+
+<button onclick="document.getElementById('file-input').click();">Choose Audio File</button>
+<input id="file-input" type="file" name="name" style="display: none;" />
+
+<script src="../MMLL.js"></script>
+<script type="text/javascript">
+
+        var inputfile = document.getElementById('file-input'); //document.createElement('input');
+        //inputfile.type = "file";
+        //inputfile.style = "display: none;";
+        
+        inputfile.addEventListener("change",function uploadFile()
+                                        {
+                                   
+                                   //arguments: array of features to extract, block size in samples, sampling rate
+                                   //assumes that sampling rate is same for audio files to be loaded
+                                   //assumes that no feature extractor has a window hop less than block size
+                                        var extractor = new MMLLFeatureExtractor(["MMLLSensoryDissonance","MMLLChordDetector","MMLLSpectralCentroid","MMLLSpectralPercentile",["MMLLSpectralPercentile",0.3,4096,1024]]);
+                                   
+                                        var updateFunction = function(blocknow,numblocks) {
+                                            if(blocknow%200==0) console.log(blocknow/numblocks)
+                                            };
+                                   
+                                   //returns a Promise
+                                   extractor.analyseAudioFile(inputfile.files[0],updateFunction).then((results) => {console.log(results)});
+                                 
+                                        }, false);
+
+     
+</script>
+</body>
+</html>
