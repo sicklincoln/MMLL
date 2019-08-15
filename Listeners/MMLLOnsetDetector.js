@@ -92,7 +92,7 @@ self.setup = function(sampleRate) {
     
     if(sampleRate >= (44100*2)) {
         
-        self.stft = new MMLLSTFT(self.N * 2,self.NOVER2 * 2,1); // 1 = Hanning window
+        self.stft = new MMLLSTFT(self.N * 2,self.NOVER2 * 2,1); // 1 = Hann window
         
     } else {
         

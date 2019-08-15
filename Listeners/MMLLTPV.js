@@ -78,7 +78,7 @@ self.setup = function(sampleRate) {
     self.m_maxpeaks = maxpeaks;
     
     
-    self.stft = new MMLLSTFT(self.m_windowsize,self.m_hopsize,1); //Hanning window better for peak detection rather than rectangular
+    self.stft = new MMLLSTFT(self.m_windowsize,self.m_hopsize,1); //Hann window better for peak detection rather than rectangular
     
     
 	//self.tcache=  (float*)RTAlloc(self.mWorld, self.m_hopsize * sizeof(float));

@@ -11,7 +11,7 @@ function MMLLSensoryDissonance(sampleRate,fftsize=2048,maxpeaks=100,peakthreshol
         self.m_srate = sampleRate;
         self.fftsize_ = fftsize;
         
-        self.stft = new MMLLSTFT(self.fftsize_,self.fftsize_/2,0);
+        self.stft = new MMLLSTFT(self.fftsize_,self.fftsize_/2,2);
         
         //for(i=0; i<12; ++i)
         

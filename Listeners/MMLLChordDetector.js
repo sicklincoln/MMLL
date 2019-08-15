@@ -41,12 +41,12 @@ self.setup = function(sampleRate) {
 	if(self.m_srate >= (44100*2)) {
         
         //presume double size function withfft(powers){}
-        self.stft = new MMLLSTFT(8192,4096,0);
+        self.stft = new MMLLSTFT(8192,4096,2);
         
         self.m_srate = self.m_srate/2;
     } else {
         
-        self.stft = new MMLLSTFT(4096,2048,0);
+        self.stft = new MMLLSTFT(4096,2048,2);
         
     }
     

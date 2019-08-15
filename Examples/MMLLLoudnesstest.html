@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>
+JavaScript Web Audio API MMLL test
+</title>
+</head>
+
+<body>
+
+<h1>MMLL testing Loudness</h1>
+
+<canvas id="canvas" width="200" height="40">
+    This text is displayed if your browser does not support HTML5 Canvas.
+</canvas> Loudness in sones<br>
+
+<script src="../MMLL.js"></script>
+
+<script type="text/javascript">
+    
+    "use strict";
+    
+    var framespersecond = 30;
+    var millisecondsperframe = Math.ceil(1000/framespersecond);
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+    var canvasleft = canvas.offsetLeft; //need page location for canvas
+    var canvastop = canvas.offsetTop;
+    var canvaswidth = canvas.width;
+    var canvasheight = canvas.height;
+    
+    
+    var i; //general reusable counter variable
+    
+    var audioblocksize = 256; //lowest latency possible
+    var sr;
+    
+    var phase = 0.0;
+    var phasechangepersample;
+    
+    var mmllloudness;
+    var sones = 0;
+    
+    var sinebuffer = new Array(audioblocksize);
+    
+    var setup = function SetUp(sampleRate) {
+        
+        sr = sampleRate;
+
+        phasechangepersample = 2*Math.PI* 1000/sr;
+        
+        mmllloudness = new MMLLLoudness(sampleRate); //accept defaults otherwise
+        
+        
+    };
+
+var callback = function CallBack(input,output,n) {
+    
+    /*
+    //test signal, should equate to 64 sones
+    for (i = 0; i < n; ++i) {
+    
+    sinebuffer[i] = 1 * Math.sin(phase);
+    
+    phase += phasechangepersample;
+    
+    }
+    
+    phase = phase%(2*Math.PI);
+    
+    //input.monoinput
+    sones = mmllloudness.next(sinebuffer);
+    */
+    
+    sones = mmllloudness.next(input.monoinput);
+     
+    console.log('loudness in sones',sones);
+    
+    for (i = 0; i < n; ++i) {
+ 
+        output.outputL[i] = input.inputL[i];
+        output.outputR[i] = input.inputR[i];
+        
+    }
+    
+};
+
+var gui = new MMLLBasicGUISetup(callback,setup,audioblocksize,true,true);
+
+setInterval(function(){ draw(); },millisecondsperframe);
+
+function draw() {
+    
+    // Store the current transformation matrix
+    context.save();
+    
+    // Use the identity matrix while clearing the canvas
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, canvaswidth, canvasheight);
+    
+    // Restore the transform
+    context.restore();
+    
+    //http://www.w3schools.com/cssref/css_colornames.asp
+    context.strokeStyle="#00FF00";
+    
+    context.lineWidth = 30;
+    
+    context.beginPath();
+    
+    context.moveTo(0,0);
+        
+    context.lineTo(sones*3,0);
+
+    context.stroke();
+    
+    
+}
+
+
+</script>
+
+</body>
+</html>

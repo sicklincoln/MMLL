@@ -1,6 +1,11 @@
 //short term Fourier transform
 //currently just calculates power spectrum, could modify later for phase spectrum etc
 
+//window types:
+// 0 = rectangular, no windowing
+// 1 or other value = Hann
+// 2 = sine
+
 function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
     
     var self = this;
@@ -18,13 +23,24 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
     //self.fft.setupFFT(fftsize);
     
     self.windowdata = new Float32Array(self.fftsize); //begins as zeroes
-    self.hanning = new Float32Array(self.fftsize);
+
+    if(self.windowtype==2) {
+        
+        self.sine = new Float32Array(self.fftsize);
+        //sine window (first half of a sine function)
+        var sineinc = Math.PI/fftsize;
+        for(var i=0;i<fftsize;++i)
+            self.sine[i]=Math.sin(sineinc*i);
+    }
+    else if (self.windowtype!=0) {
     
-    var ang=(2.0*Math.PI)/self.fftsize;
-    
+        var ang=(2.0*Math.PI)/self.fftsize;
+        
+        self.hann = new Float32Array(self.fftsize);
     for(var i=0;i<fftsize;++i)
-        self.hanning[i]=0.5 - 0.5*Math.cos(ang*i);
-    
+        self.hann[i]=0.5 - 0.5*Math.cos(ang*i);
+    }
+   
     //initialised containing zeroes
     self.powers = new Float32Array(self.halffftsize);
     //var freqs = result.subarray(result.length / 2);
@@ -47,15 +63,24 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
             //no window function (square window)
             if(self.windowtype==0) {
             for (i = 0; i< self.fftsize; ++i) {
-                self.reals[i] = self.windowing.store[i]; //*hanning[i];
+                self.reals[i] = self.windowing.store[i];
                 //self.imags[i] = 0.0;
                 
             }
             } else {
-                for (i = 0; i< self.fftsize; ++i) {
-                    self.reals[i] = self.windowing.store[i]*self.hanning[i];
-                    //self.imags[i] = 0.0;
+                
+                if(self.windowtype==2) {
                     
+                    for (i = 0; i< self.fftsize; ++i) {
+                        self.reals[i] = self.windowing.store[i]*self.sine[i];
+                    }
+                }
+                    else {
+                for (i = 0; i< self.fftsize; ++i) {
+                    self.reals[i] = self.windowing.store[i]*self.hann[i];
+                    //self.imags[i] = 0.0;
+                }
+                        
                 }
             }
   

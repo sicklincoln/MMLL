@@ -13,7 +13,7 @@ function MMLLSpectralCentroid(sampleRate, fftsize=2048,hopsize=1024) {
         
         self.nyquistbin_ = fftsize/2;
         
-        self.stft = new MMLLSTFT(self.fftsize_,hopsize,1);
+        self.stft = new MMLLSTFT(self.fftsize_,hopsize,2);
 
         //self.frequencyperbin_ = self.m_srate / self.fftsize_;
         

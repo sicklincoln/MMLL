@@ -13,7 +13,7 @@ function MMLLSpectralPercentile(sampleRate, percentile=0.8,fftsize=2048,hopsize=
         
         self.nyquistbin_ = fftsize/2;
 
-        self.stft = new MMLLSTFT(self.fftsize_,hopsize,1);
+        self.stft = new MMLLSTFT(self.fftsize_,hopsize,2);
         
         self.spectralpercentile_ = 0.1;
         
