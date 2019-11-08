@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>JavaScript Web Audio API MMLL test</title>
+</head>
+
+<body>
+
+<h1>MMLL testing IFFT under AudioWorklet without KissFFT</h1>
+
+<p>Requires a recent version of Chrome</p>
+<p>Must be run on a remote server, or e.g., via local python server at  127.0.0.1:8000
+<br>python2: python -m SimpleHTTPServer 8000
+<br>python3: python -m http.server 8000
+</p>
+
+<input type="range" min="1" max="256" value="256" step="1" oninput="setGain(this.value)" /> Set gain<br><br>
+<button onclick="startAudio()">Start Audio</button>
+
+<input type="range" min="0" max="2000" value="0" step="1" oninput="setHoles(this.value)" /> Set number of zeroed fft components<br><br>
+<input type="range" min="0" max="512" value="512" step="1" oninput="lowPass(this.value)" /> Low pass filter cutoff<br><br>
+
+
+<script src="../MMLL.js"></script>
+
+<script type="text/javascript">
+    
+    "use strict";
+    
+    var i; //general reusable counter variable
+    
+   var fftsize = 1024;
+    var hopsize = 512;
+    
+    //imposed by audio worklet API
+    var audioblocksize = 128; //sample block size different to hop size, compensatory code in audio worklet processor
+    
+    var started = false;
+    var context;
+    var ifftWorkletNode;
+    
+    var numholes = 0;
+    var lpcutoff = 1024;
+    
+    function startAudio() {
+        
+        if(started==false) {
+            // const
+            context = new AudioContext();
+            
+            context.audioWorklet.addModule('ifftprocessorMMLL.js').then(() => {
+            
+            //not available. Either must concat code files, or pass via stringified js object then eval trick
+            //AudioWorkletGlobalScope.importScripts('MMLL.js');
+
+             //let oscillator = new OscillatorNode(context);
+             //oscillator.type = 'sawtooth';
+             //oscillator.frequency.value = 44.5;
+            
+           var soundbuffer = null;
+             var request = new XMLHttpRequest();
+            request.open('GET', 'sound.wav', true);
+            request.responseType = 'arraybuffer';
+            
+            // Decode asynchronously
+            request.onload = function() {
+            
+                                                                        
+                    context.decodeAudioData(request.response, function(buffer) {
+                                    soundbuffer = buffer;
+                                            
+                                      
+                                     //finish set up now
+                                            // After the resolution of module loading, an AudioWorkletNode can be
+                                            // constructed.
+                                            //pass in arbitrary data
+                                            ifftWorkletNode = new AudioWorkletNode(context, 'ifft-processor', {
+                                                                                   processorOptions: {
+                                                                                   someUsefulVariable: 0.5
+                                                                                   }
+                                                                                   });
+                                            
+                                            ifftWorkletNode.port.onmessage = (event) => {
+                                            // Handling data from the processor.
+                                            //console.log('mmlltest.html',event.data);
+                                            };
+                                            
+                                            ifftWorkletNode.port.postMessage('Hello!');
+                                            
+                                            var playbuf = context.createBufferSource(); // creates a sound source
+                                            playbuf.buffer = buffer;                    // tell the source which sound to play
+                                            playbuf.connect(ifftWorkletNode).connect(context.destination);       // connect the source to the context's destination (the speakers)
+                                            playbuf.start(0);                           // play the source now
+                                            
+                                            playbuf.loop = true;
+                                            // AudioWorkletNode can be interoperable with other native AudioNodes.
+                                            //oscillator.connect(ifftWorkletNode).connect(context.destination);
+                                            //oscillator.start();
+                                            
+                                            }, function(error){console.log(error)});
+                                                                        
+                                                                        
+            }
+                                                                        
+                                                                        
+            request.send();
+      
+             });
+             
+             started = true;
+        }
+        
+    }
+
+function setGain(newValue) {
+    
+    var val = parseFloat(newValue)/256;
+    
+    //ifftWorkletNode.gain = val;
+    //https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/parameterDescriptors
+    //const gainParam = whiteNoiseNode.parameters.get('customGain')
+    //gainParam.setValueAtTime(0, audioContext.currentTime)
+    //gainParam.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.5)
+    
+    //gainWorkletNode.parameters.get('gain').setValueAtTime(0,val);
+    
+    //console.log(val, gainWorkletNode.parameters.get('gain').value);
+    
+    const gainParam = ifftWorkletNode.parameters.get('gain');
+    gainParam.setValueAtTime(val, context.currentTime);
+    
+    // console.log('changed gain',gainParam.value);
+    
+    //document.getElementById("thresholdtext").innerHTML = "Threshold: " + threshold.toPrecision(4);
+    
+}
+ 
+
+function setHoles(newValue) {
+    numholes = parseFloat(newValue);
+    
+    const param = ifftWorkletNode.parameters.get('numholes');
+    param.setValueAtTime(numholes, context.currentTime);
+}
+
+function lowPass(newValue) {
+    lpcutoff = parseFloat(newValue);
+    
+    const param = ifftWorkletNode.parameters.get('lpcutoff');
+    param.setValueAtTime(lpcutoff, context.currentTime);
+}
+
+</script>
+
+</body>
+</html>
