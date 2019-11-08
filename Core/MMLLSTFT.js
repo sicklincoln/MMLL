@@ -17,10 +17,12 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
     self.postfftfunction = postfftfunction;
     
     self.windowing= new MMLLwindowing(self.fftsize,self.hopsize);
-    //self.fft = new MMLLFFT(); //
-    self.fft = new FFTR(fftsize);
+    self.mmllfft = new MMLLFFT(); //
     
-    //self.fft.setupFFT(fftsize);
+    //old KissFFT
+    //self.fft = new FFTR(fftsize);
+    
+    self.mmllfft.setupFFT(fftsize);
     
     self.windowdata = new Float32Array(self.fftsize); //begins as zeroes
 
@@ -48,10 +50,62 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
     
     self.complex = new Float32Array(self.fftsize+2);
     
-    //self.imags = new Float32Array(self.fftsize);
+    self.imags = new Float32Array(self.fftsize);
     
     //4 =2*2 compensates for half magnitude if only take non-conjugate part, fftsize compensates for 1/N
     self.fftnormmult = 4*self.fftsize; //*fftsize;// /4; //1.0/fftsize;  or 1/(fftsize.sqrt)
+    
+    self.inversereals = new Float32Array(self.fftsize);
+    self.inverseimags = new Float32Array(self.fftsize);
+    
+    
+    self.inverse = function(fftdata) {
+        var k;
+        
+        for (k = 0; k <= self.halffftsize; ++k) {
+            var twok = 2*k;
+            
+            //create conjugate
+            self.inversereals[k] = fftdata[twok];
+            self.inverseimags[k] = fftdata[twok+1]; //-1*fftdata[twok+1];
+            
+            //self.inversereals[self.fftsize-1-k] = self.inversereals[k];
+            //self.inverseimags[self.fftsize-1-k] = self.inverseimags[k];
+            
+        }
+        
+        for (k = 1; k < self.halffftsize; ++k) {
+            //var twok = 2*k;
+            
+            //create conjugate
+            //self.inversereals[k] = fftdata[twok];
+            //self.inverseimags[k] = fftdata[twok+1]; //-1*fftdata[twok+1];
+            
+            self.inversereals[self.fftsize-k] = self.inversereals[k];
+            self.inverseimags[self.fftsize-k] = -self.inverseimags[k];
+            
+        }
+        
+//        for (k = self.halffftsize; k< self.fftsize; ++k) {
+//
+//            self.inversereals[k] = 0;
+//            self.inverseimags[k] = 0;
+//
+//        }
+        
+        //https://www.embedded.com/dsp-tricks-computing-inverse-ffts-using-the-forward-fft/
+        
+        //self.mmllfft.inverseTransform(self.inversereals, self.inverseimags);
+        //self.mmllfft.transform(self.inversereals, self.inverseimags);
+        
+        
+        
+        self.mmllfft.transform(self.inverseimags,self.inversereals);
+        
+        
+        //return self.inversereals;
+    }
+    
     
     self.next = function(input) {
         
@@ -59,6 +113,10 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
         var ready = self.windowing.next(input);
         
         if(ready) {
+            
+            for (i = 0; i< self.fftsize; ++i)
+                self.imags[i] = 0;
+            
             
             //no window function (square window)
             if(self.windowtype==0) {
@@ -84,11 +142,24 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
                 }
             }
   
-            //fft library call
-            //self.fft.transform(self.reals, self.imags);
-            //var output = self.fft.forward(self.reals);
+           //var output = self.fft.forward(self.reals);
             
-            self.fft.forward(self.reals,self.complex);
+            //old KissFFT
+            //self.fft.forward(self.reals,self.complex);
+            
+            //fft library call
+            self.mmllfft.transform(self.reals, self.imags);
+            
+            //could fill in complex data myself now
+            
+            for (var k = 0; k <= self.halffftsize; ++k) {
+                var twok = 2*k;
+                
+                self.complex[twok] = self.reals[k];
+                self.complex[twok+1] = self.imags[k];
+                
+            }
+            
             
             //output format is interleaved k*2, k*2+1 real and imag parts
             //DC and 0 then bin 1 real and imag ... nyquist and 0
@@ -96,10 +167,15 @@ function MMLLSTFT(fftsize=1024,hopsize=512,windowtype=0,postfftfunction) {
             //power spectrum not amps, for comparative testing
             for (var k = 0; k < self.halffftsize; ++k) {
                 //Math.sqrt(
-                var twok = 2*k;
-                //self.powers[k] = ((output[twok] * output[twok]) + (output[twok+1] * output[twok+1]) ); // * fftnormmult;
                 
-                self.powers[k] = ((self.complex[twok] * self.complex[twok]) + (self.complex[twok+1] * self.complex[twok+1]) );
+                //NO //self.powers[k] = ((output[twok] * output[twok]) + (output[twok+1] * output[twok+1]) ); // * fftnormmult;
+                
+                //old KissFFT
+                //var twok = 2*k;
+                //self.powers[k] = ((self.complex[twok] * self.complex[twok]) + (self.complex[twok+1] * self.complex[twok+1]) );
+                
+                //var compareme = (self.reals[k]*self.reals[k]) + (self.imags[k]*self.imags[k]);
+                self.powers[k] = (self.reals[k]*self.reals[k]) + (self.imags[k]*self.imags[k]);
                 
                 //will scale later in onset detector itself
                 

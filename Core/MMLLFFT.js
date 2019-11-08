@@ -257,13 +257,15 @@ self.transform = function (real, imag) {
 //    }
 //    
 //
-//    /*
-//     * Computes the inverse discrete Fourier transform (IDFT) of the given complex vector, storing the result back into the vector.
-//     * The vector can have any length. This is a wrapper function. This transform does not perform scaling, so the inverse is not a true inverse.
-//     */
-//    function inverseTransform(real, imag) {
-//        transform(imag, real);
-//    }
+    /*
+     * Computes the inverse discrete Fourier transform (IDFT) of the given complex vector, storing the result back into the vector.
+     * The vector can have any length. This is a wrapper function. This transform does not perform scaling, so the inverse is not a true inverse.
+     */
+    
+    
+    self.inverseTransform = function(real, imag) {
+        self.transform(imag, real);
+    }
 
 
 }

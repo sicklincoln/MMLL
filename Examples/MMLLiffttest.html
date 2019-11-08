@@ -25,6 +25,12 @@
     
    var fftsize = 1024;
     var hopsize = 512;
+    //var fftnow = new FFT(fftsize);
+    //var fftnowr = new FFTR(fftsize);
+    
+    //var realnow = new Float32Array(stft.fftsize);
+   // var complexnow = new Float32Array(fftsize);
+    
     var scalefactor = 1.0/fftsize;
     
     var audioblocksize = hopsize; //convenient, but extra code needed if different to output samples per block from hopsize buffer
@@ -36,7 +42,11 @@
     var stft;
     var overlapadd;
     var ifftoutput = new Float32Array(fftsize);
+    //var ifftoutput2 = new Float32Array(fftsize+2);
+    //var ifftoutput3 = new Float32Array(fftsize);
     var oaoutput = new Float32Array(hopsize);
+    
+    //var result = new Float32Array(fftsize);
     
     var setup = function SetUp(sampleRate) {
         
@@ -84,13 +94,53 @@ var callback = function CallBack(input,output,n) {
         
         
         //scale by dividing by fftsize
-        for(i=0; i<fftsize; ++i)
-            fftdata[i] *= scalefactor;
+        //for(i=0; i<fftsize; ++i)
+        //    fftdata[i] *= scalefactor;
         
         //then inversefft
-        stft.fft.inverse(fftdata,ifftoutput);
+        //stft.fft.inverse(fftdata,ifftoutput);
+        
+        
+        //fftnowr.inverse(fftdata,ifftoutput3);
+        
+        //var complex3 = fftnow.inverse(fftdata);
+        
+     
+        //swap real and imag
+        //for(i=0; i<stft.halffftsize; ++i) {
+         ///
+           // var twoi = 2*i;
+            //
+            //complexnow[twoi] = fftdata[twoi+1];
+            //complexnow[twoi+1] = fftdata[twoi];
+        
+            //realnow[i] = fftdata[i]
+            
+       //}
+        
+        //var complexnow2 = fftnow.forward(complexnow);
+        
+        
+        stft.inverse(fftdata);
+        
+        for(i=0; i<fftsize; ++i)
+            ifftoutput[i] = stft.inversereals[i] * scalefactor;
+        
+        
+        //stft.fft.forward(complexnow,ifftoutput2);
+        
+        //for(i=0; i<fftsize; ++i) {
+           
+         //   complexnow[i] = fftdata[i];
+
+        //}
+        
+        //stft.fft.forward(complexnow,ifftoutput2);
         
         //then overlap add
+        //overlapadd.next(ifftoutput,oaoutput);
+        
+        
         overlapadd.next(ifftoutput,oaoutput);
         
     }

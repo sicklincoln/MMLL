@@ -51,7 +51,7 @@ var FFT = function (size) {
     };
     
     self.inverse = function(cin) {
-	self.cin.set(cpx);
+	self.cin.set(cin);//cpx
 	kiss_fft(self.icfg, self.inptr, self.outptr);
 	return new Float32Array(kissFFTModule.HEAPU8.buffer,
 				self.outptr, self.size * 2);
@@ -99,6 +99,7 @@ var FFTR = function (size) {
     
     self.inverse = function(cpx,output) {
 	self.ci.set(cpx);
+            
 	kiss_fftri(self.icfg, self.cptr, self.rptr);
 	//return new Float32Array(kissFFTModule.HEAPU8.buffer,
 				//self.rptr, self.size);
