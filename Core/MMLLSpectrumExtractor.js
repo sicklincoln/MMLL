@@ -1,30 +1,12 @@
-//for non-realtime feature extraction with MMLL Listeners
-//adapts framework of MMLLWebAudioSetup
+//for non-realtime extraction of the spectrum
 
-//blocksize will determine how often feature values are stored
-
-//returns an array of features, given a sound file to analyse
+//returns an array of complex spectral data frames, given a MONO sound file to analyse
 
 //Sample rates for sound files must match that assumed in overall code, no sample rate conversion is carried out
 
-function MMLLFeatureExtractor(featurestoextract, blocksize=1024,sampleRate=44100) {
+function MMLLSpectrumExtractor(blocksize=512,sampleRate=44100,fftsize=1024,hopsize=512,windowtype=0) {
  
     var self = this;
-    
-    //self.filenames = filenames;
-    
-    //Parse and replace any single string by array containing string, so consistent if additional arguments were passed in
-    for (var i =0; i< featurestoextract.length; ++i) {
-        
-        if(!(Array.isArray(featurestoextract[i])) ) {
-            
-            featurestoextract[i] = [featurestoextract[i]];
-            
-        }
-        
-    }
-    
-   self.featurestoextract = featurestoextract;
     
     self.audioblocksize = blocksize;
     self.inputAudio = new MMLLInputAudio(self.audioblocksize);
@@ -32,7 +14,11 @@ function MMLLFeatureExtractor(featurestoextract, blocksize=1024,sampleRate=44100
     self.sampleRate = sampleRate;
 
     self.numInputChannels = 1;
- 
+
+    self.fftsize = fftsize;
+    self.hopsize = hopsize;
+    self.windowtype = windowtype;
+    
     //context required for sampler's decodeAudioData calls
     
     //can request specific sample rate, but leaving as device's default for now
@@ -63,7 +49,7 @@ function MMLLFeatureExtractor(featurestoextract, blocksize=1024,sampleRate=44100
     self.analyseAudioFile = function(filename,updatefunction) {
         
        
-        var featuredata;
+        var spectraldata;
         
         self.sampler = new MMLLSampler();
         
@@ -87,74 +73,68 @@ function MMLLFeatureExtractor(featurestoextract, blocksize=1024,sampleRate=44100
                                  //self.samplearray = new Float32Array(2*audioblocksize);
                                  
                                  }
+                                 //fresh STFT object
+                                 var stft = new MMLLSTFT(self.fftsize,self.hopsize,self.windowtype);
+                                 
                                  
                                  //samplearray depends on number of Channels whether interleaved
                                  
                                  //include last frame, will be zero padded as needed
-                                 var numblocks = Math.ceil(self.sampleplayer.lengthinsampleframes/self.audioblocksize);
+                                 var numblocks = Math.floor(self.sampleplayer.lengthinsampleframes/self.audioblocksize);
                                  
+                                 
+                                 //starts with fftsize-hopsize in the bank
+                                 var numspectralframes = Math.floor(((numblocks*self.audioblocksize) - self.hopsize)/self.hopsize) + 1;
                                  
                                  //self.processSoundFile(self.audioblocksize);
                               
-                                 var numfeatures = featurestoextract.length;
                                  
-                                 featuredata = new Array(featuredata);
-                                 
-                                 
-                                 var j=0, f = 0;
-                                 
-                                 for (j = 0; j < numblocks; ++j)
-                                 featuredata[j] = new Array(numfeatures);
+                                 spectraldata = new Array(numspectralframes);
                                  
                                  
-                                 var extractors = new Array(numfeatures);
+                                 var j=0, i = 0;
                                  
-                                 for (f = 0; f < numfeatures; ++f) {
+                                 //complex data not in packed form, but dc and nyquist real values as complex numbers at 0 and fftsize indices
+                                 for (j = 0; j < numspectralframes; ++j)
+                                 spectraldata[j] = new Array(self.fftsize+2);
                                  
-                                 var featurestring = new String("new " + featurestoextract[f][0] + "("+self.sampleRate);
+                                 console.log('Extracting spectrum for: ',filename); //debug console message
                                  
-                                 if(featurestoextract[f].length>1) {
-                                 
-                                 for (j = 1; j < featurestoextract[f].length; ++j)
-                                    featurestring += "," + featurestoextract[f][j];
-                                 
-                                 }
-                                 
-                                 featurestring += ")";
-                                 
-                                 //extractors[f] = eval("new " + featurestoextract[f][0] + "("+self.sampleRate+")"); //new featurestoextract[f];
-                                 
-                                 extractors[f] = eval(featurestring);
-                                 
-                                 //https://stackoverflow.com/questions/1366127/how-do-i-make-javascript-object-using-a-variable-string-to-define-the-class-name
-                                 //var obj = eval("new " + classNameString + "()");
-                                 //var obj = (Function('return new ' + classNameString))()h
-                                 
-                                 
-                                 
-                                 
-                                 }
-                                 
-                                 console.log('Extracting features for: ',filename); //debug console message
+                                 var spectralframecount = 0;
                                  
                                  for (j = 0; j < numblocks; ++j) {
           
                                     updatefunction(j,numblocks);
                                  
                                  //needed since player accumulates to its output
-                                    for (var i = 0; i < self.audioblocksize; ++i) self.inputAudio.monoinput[i] = self.inputAudio.inputL[i] = self.inputAudio.inputR[i] = 0.0;
+                                    for (i = 0; i < self.audioblocksize; ++i) self.inputAudio.monoinput[i] = self.inputAudio.inputL[i] = self.inputAudio.inputR[i] = 0.0;
                                  
                                     self.sampleplayer.render(self.inputAudio,self.audioblocksize);
                                  
-                                    //extract features over this block
-                                    for (f = 0; f < numfeatures; ++f) {
-                                      featuredata[j][f] =  extractors[f].next(self.inputAudio.monoinput);
-                                    }
+                                    var newframe = stft.next(self.inputAudio.monoinput);
+                                 
+                                 if(newframe) {
+                                 
+                                 if(spectralframecount>=numspectralframes) {
+                                 
+                                 console.log("what the spectrum?",numblocks,numspectralframes,spectralframecount,self.hopsize,self.fftsize);
+                                 }
+                                 
+                                 
+                                 // var fftdata = stft.complex;
+                                 
+                                  for (i = 0; i < (self.fftsize+2); ++i)
+                                    spectraldata[spectralframecount][i] = stft.complex[i];
+                                 
+                                    ++spectralframecount;
+                                 }
+                                 
+                                
                                  
                                  }
                                  
                                  
-                                 resolve(featuredata); //return via Promise
+                                 resolve(spectraldata); //return via Promise
                                  
                                  
                                  },self.audiocontext);

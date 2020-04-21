@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>JavaScript FeatureExtractor test for multiple audio files</title>
+</head>
+
+<body>
+
+<p>Extract audio features from multiple audio files and return results (to console)</p>
+
+<button onclick="document.getElementById('file-input').click();">Choose Audio Files</button>
+<input id="file-input" multiple type="file" name="name" style="display: none;" />
+
+<script src="../MMLL.js"></script>
+<script type="text/javascript">
+
+var inputfile = document.getElementById('file-input'); //document.createElement('input');
+//inputfile.type = "file";
+//inputfile.style = "display: none;";
+var extractor;
+var updateFunction;
+
+updateFunction = function(blocknow,numblocks) {
+    if(blocknow%200==0) console.log(blocknow/numblocks)
+};
+
+async function afunc(inputs) {
+    
+    console.log(inputs);
+    
+    //arguments: array of features to extract, block size in samples, sampling rate
+    //assumes that sampling rate is same for audio files to be loaded
+    //assumes that no feature extractor has a window hop less than block size
+    extractor = new MMLLSpectrumExtractor(512,44100,1024,512,0);
+    
+    var resultarray = new Array(inputs.length);
+    
+    for(var j=0; j< inputs.length; ++j)
+    resultarray[j] = await extractor.analyseAudioFile(inputs[j],updateFunction); //await afunc(inputs[j]);
+    //returns a Promise
+    //promisearray[j] = extractor.analyseAudioFile(inputfile.files[j],updateFunction);
+    
+    console.log(resultarray);
+}
+        
+inputfile.addEventListener("change",function uploadFile(){ afunc(inputfile.files); });
+
+     
+</script>
+</body>
+</html>
