@@ -41,7 +41,7 @@ self.setup = function(sampleRate) {
 	
 	self.m_qbands = numbands;
     
-	self.m_SR = sr;
+	//self.m_SR = sr;
     
     var fftN = self.m_N; //2048;
     
@@ -380,7 +380,7 @@ self.next = function(input) {
                 var theta2 = Math.atan(Xhk2imag/Xhk2real);
                 var theta = Math.atan(Xhkimag/Xhkreal);
                 
-                var freq= (self.m_SR)*(Math.abs(theta2-theta))/6.28318530717952646;
+                var freq= (self.m_srate)*(Math.abs(theta2-theta))/6.28318530717952646;
                 
                 //printf("do you believe freq? %d max %f min %f result %f\n",k,m_maxfreq, m_minfreq, freq);
                 
